@@ -7,7 +7,6 @@ import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.content.Context;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
@@ -15,7 +14,9 @@ import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageButton;
@@ -24,13 +25,12 @@ import android.widget.Toast;
 
 public class MainActivity extends Activity implements OnClickListener {
 
-
-	protected static final int REQUEST_OK = 1;
+	private static final int CLEAR_MENU_ITEM = Menu.FIRST;
+	private static final int SAVE_MENU_ITEM = CLEAR_MENU_ITEM + 1;
 
 	private SpeechRecognizer sr;
 
 	private SentenceRecognitionListener listener;
-
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -52,12 +52,33 @@ public class MainActivity extends Activity implements OnClickListener {
 
 		startAnimation();
 	}
-
+	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main, menu);
-		return true;
+		menu.add(0, CLEAR_MENU_ITEM, 0, "Clear");
+		menu.add(0, SAVE_MENU_ITEM, 0, "Save");
+		return super.onCreateOptionsMenu(menu);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case CLEAR_MENU_ITEM:
+			((TextView)findViewById(R.id.sentenceText)).setText("");
+			break;
+		case SAVE_MENU_ITEM:
+			showMsg("Save");
+			break;
+		default:
+			break;
+		}
+		return super.onOptionsItemSelected(item);
+	}
+
+	private void showMsg(String msg) {
+		Toast toast = Toast.makeText(this, msg, Toast.LENGTH_LONG);
+		toast.setGravity(Gravity.CENTER, toast.getXOffset() / 2, toast.getYOffset() / 2);
+		toast.show();
 	}
 
 	public void onClick(View arg0) {
@@ -108,8 +129,6 @@ public class MainActivity extends Activity implements OnClickListener {
 
 	}
 	
-	
-	
 	/**
 	 * 
 	 * @author dave
@@ -117,9 +136,8 @@ public class MainActivity extends Activity implements OnClickListener {
 	 */
 	
 	class SentenceRecognitionListener implements RecognitionListener{
-		private Context context;
-		private String bestSentence = "";
 
+		private String bestSentence = "";
 
 		@Override
 		public void onBeginningOfSpeech() {
@@ -180,10 +198,6 @@ public class MainActivity extends Activity implements OnClickListener {
 			
 			recording(false);
 			
-			
-		
-			
-			
 			float[] confidenceList = results.getFloatArray(SpeechRecognizer.CONFIDENCE_SCORES);
 			int bestGuessIndex = 0;
 			float highestConfidence = 0;
@@ -201,8 +215,7 @@ public class MainActivity extends Activity implements OnClickListener {
 				((TextView)findViewById(R.id.sentenceText)).append(bestSentence);
 			} else {
 				Log.d("Speech", "low confidence");
-				Toast toast = Toast.makeText(context, "Please say that again...",  Toast.LENGTH_SHORT);
-				toast.show();
+				showMsg( "Please say that again...");
 			}
 		}
 
