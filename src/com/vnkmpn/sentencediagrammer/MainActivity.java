@@ -1,6 +1,10 @@
 package com.vnkmpn.sentencediagrammer;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
@@ -29,6 +33,8 @@ public class MainActivity extends Activity implements OnClickListener {
 	private static final int SAVE_MENU_ITEM = CLEAR_MENU_ITEM + 1;
 
 	private SpeechRecognizer sr;
+	
+	private String key = "INVALID_KEY";
 
 	private SentenceRecognitionListener listener;
 
@@ -39,7 +45,7 @@ public class MainActivity extends Activity implements OnClickListener {
 
 		Typeface type = Typeface.createFromAsset(getAssets(),"fonts/RobotoCondensed-Regular.ttf"); 
 		((TextView)findViewById(R.id.titleText)).setTypeface(type);
-		
+
 		((TextView)findViewById(R.id.sentenceText)).setTypeface(type);
 
 		findViewById(R.id.listenButton).setOnClickListener(this);
@@ -50,9 +56,33 @@ public class MainActivity extends Activity implements OnClickListener {
 
 		sr.setRecognitionListener(listener);
 
+		try {
+			InputStream inputStream = getAssets().open("dictionary.properties");
+			Properties properties = new Properties();
+			properties.load(inputStream);
+			Log.d("Main","The properties are now loaded");
+			key = properties.getProperty("KEY");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		startAnimation();
 	}
-	
+
+	private ArrayList<String> lookUpWord(String word) {
+		MWDictionaryLookup dict = (MWDictionaryLookup) new MWDictionaryLookup().execute(word, key);
+		ArrayList<String> types = null;
+		try {
+			types = dict.get();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return types;
+	}
+
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		menu.add(0, CLEAR_MENU_ITEM, 0, "Clear");
@@ -90,7 +120,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	public void setSentenceText(String text) {
 		((TextView)findViewById(R.id.sentenceText)).append(text);
 	}
-	
+
 	@SuppressLint("NewApi")
 	public void startAnimation() {
 		long firstStageDuration = 1500;
@@ -106,11 +136,11 @@ public class MainActivity extends Activity implements OnClickListener {
 		ObjectAnimator buttonFadeIn = ObjectAnimator.ofFloat(button, "alpha",
 				0f, 1f);
 		buttonFadeIn.setDuration(firstStageDuration);
-		
+
 		ObjectAnimator titleFadeIn = ObjectAnimator.ofFloat(titleText, "alpha",
 				0f, 1f);
 		titleFadeIn.setDuration(firstStageDuration);
-		
+
 		ObjectAnimator bounceUp = ObjectAnimator.ofFloat(button,  "translationY", secondStageDistance, 0f);
 		bounceUp.setDuration(secondStageDuration);
 
@@ -118,23 +148,23 @@ public class MainActivity extends Activity implements OnClickListener {
 
 		stageOne.play(buttonDropIn).with(buttonFadeIn).with(titleFadeIn);
 
-		
+
 		ObjectAnimator titleFadeOut = ObjectAnimator.ofFloat(titleText, "alpha",  1f, 0f);
 		titleFadeOut.setDuration(secondStageDuration);
-		
+
 		AnimatorSet stageTwo = new AnimatorSet();
 
 		stageTwo.play(bounceUp).with(titleFadeOut).after(stageOne);
 		stageTwo.start();
 
 	}
-	
+
 	/**
 	 * 
 	 * @author dave
 	 *
 	 */
-	
+
 	class SentenceRecognitionListener implements RecognitionListener{
 
 		private String bestSentence = "";
@@ -195,9 +225,9 @@ public class MainActivity extends Activity implements OnClickListener {
 		@Override
 		public void onResults(Bundle results) {
 			Log.d("Speech", "onResults");
-			
+
 			recording(false);
-			
+
 			float[] confidenceList = results.getFloatArray(SpeechRecognizer.CONFIDENCE_SCORES);
 			int bestGuessIndex = 0;
 			float highestConfidence = 0;
@@ -217,22 +247,35 @@ public class MainActivity extends Activity implements OnClickListener {
 				Log.d("Speech", "low confidence");
 				showMsg( "Please say that again...");
 			}
+			String input = ((TextView)findViewById(R.id.sentenceText)).getText().toString();
+			String[] words = input.split( " " );
+
+			for (int i = 0; i < words.length; i++) {
+				ArrayList<String> types = lookUpWord(words[i]);
+				if (types != null) {
+				for (int j = 0; j < types.size(); j++) {
+					showMsg( words[i] + " is a " + types.get(j));
+				}
+				} else {
+					showMsg("word lookup failed - check your dictionary API Key");
+				}
+			}
 		}
 
 		@Override
 		public void onRmsChanged(float rmsdB) {
 		}
 	}
-	
+
 	private void recording(boolean enabled) 
 	{
 		long firstStageDuration = 500;
 		float distance = -300f;
 		float origin;
 		float destination;
-		
+
 		ImageButton button = (ImageButton) findViewById(R.id.listenButton);
-		
+
 		if (enabled) {
 			origin = 0;
 			destination = distance;
