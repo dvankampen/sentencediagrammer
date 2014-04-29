@@ -33,7 +33,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	private static final int SAVE_MENU_ITEM = CLEAR_MENU_ITEM + 1;
 
 	private SpeechRecognizer sr;
-	
+
 	private String key = "INVALID_KEY";
 
 	private SentenceRecognitionListener listener;
@@ -106,7 +106,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	}
 
 	private void showMsg(String msg) {
-		Toast toast = Toast.makeText(this, msg, Toast.LENGTH_LONG);
+		Toast toast = Toast.makeText(this, msg, Toast.LENGTH_SHORT);
 		toast.setGravity(Gravity.CENTER, toast.getXOffset() / 2, toast.getYOffset() / 2);
 		toast.show();
 	}
@@ -127,7 +127,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		long secondStageDuration = 500;
 		float firstStageDistance = -500f;
 		float secondStageDistance = 100f;
-		ImageButton button = (ImageButton) findViewById(R.id.listenButton);
+		final ImageButton button = (ImageButton) findViewById(R.id.listenButton);
 		TextView titleText = (TextView) findViewById(R.id.titleText);
 
 		ObjectAnimator buttonDropIn = ObjectAnimator.ofFloat(button,
@@ -154,9 +154,16 @@ public class MainActivity extends Activity implements OnClickListener {
 
 		AnimatorSet stageTwo = new AnimatorSet();
 
+
 		stageTwo.play(bounceUp).with(titleFadeOut).after(stageOne);
 		stageTwo.start();
 
+		button.postDelayed(new Runnable() {
+		    @Override
+		    public void run() {
+		        button.setBackgroundResource(R.drawable.greenroundcorners);
+		    }
+		}, firstStageDuration + secondStageDuration);
 	}
 
 	/**
@@ -188,6 +195,11 @@ public class MainActivity extends Activity implements OnClickListener {
 		@Override
 		public void onError(int error) {
 			Log.d("Speech", "onError");
+
+			signifyWarning();
+
+
+			//recording(false);
 			switch (error)
 			{
 			case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS:
@@ -225,7 +237,6 @@ public class MainActivity extends Activity implements OnClickListener {
 		@Override
 		public void onResults(Bundle results) {
 			Log.d("Speech", "onResults");
-
 			recording(false);
 
 			float[] confidenceList = results.getFloatArray(SpeechRecognizer.CONFIDENCE_SCORES);
@@ -253,9 +264,9 @@ public class MainActivity extends Activity implements OnClickListener {
 			for (int i = 0; i < words.length; i++) {
 				ArrayList<String> types = lookUpWord(words[i]);
 				if (types != null) {
-				for (int j = 0; j < types.size(); j++) {
-					showMsg( words[i] + " is a " + types.get(j));
-				}
+					for (int j = 0; j < types.size(); j++) {
+						showMsg( words[i] + " is a " + types.get(j));
+					}
 				} else {
 					showMsg("word lookup failed - check your dictionary API Key");
 				}
@@ -269,25 +280,90 @@ public class MainActivity extends Activity implements OnClickListener {
 
 	private void recording(boolean enabled) 
 	{
-		long firstStageDuration = 500;
-		float distance = -300f;
+		long duration = 100;
+		float distance = -50f;
 		float origin;
 		float destination;
+		final int nextColor;
 
-		ImageButton button = (ImageButton) findViewById(R.id.listenButton);
+		final ImageButton button = (ImageButton) findViewById(R.id.listenButton);
+
+		origin = 0;
+		destination = distance;
 
 		if (enabled) {
-			origin = 0;
-			destination = distance;
-			button.setBackgroundResource(R.drawable.redroundcorners);
+			nextColor = R.drawable.redroundcorners;
 		} else {
-			origin = distance;
-			destination = 0;
-			button.setBackgroundResource(R.drawable.greenroundcorners);
+			nextColor = R.drawable.greenroundcorners;
 		}
 		ObjectAnimator buttonMove = ObjectAnimator.ofFloat(button,
 				"translationY", origin, destination);
-		buttonMove.setDuration(firstStageDuration);
-		buttonMove.start();
+		buttonMove.setDuration(duration);
+
+		ObjectAnimator buttonMove2 = ObjectAnimator.ofFloat(button,
+				"translationY", destination, origin);
+		buttonMove2.setDuration(duration);
+
+		AnimatorSet bounce = new AnimatorSet();
+
+		bounce.playSequentially(buttonMove, buttonMove2);
+		bounce.start();
+		
+		button.postDelayed(new Runnable() {
+		    @Override
+		    public void run() {
+		        button.setBackgroundResource(nextColor);
+		    }
+		}, (2*duration));
+	}
+
+
+	public void signifyWarning() {
+		long halfStageDuration = 50;
+		long fullStageDuration = 100;
+		float leftOffset = -25f;
+		float rightOffset = 25f;
+		float origin = 0;
+
+		final ImageButton button = (ImageButton) findViewById(R.id.listenButton);
+		
+		button.setBackgroundResource(R.drawable.yellowroundcorners);
+
+		ObjectAnimator halfRightMove = ObjectAnimator.ofFloat(button,
+				"translationX", origin, rightOffset);
+		halfRightMove.setDuration(halfStageDuration);
+
+		ObjectAnimator halfLeftMove = ObjectAnimator.ofFloat(button,
+				"translationX", rightOffset, origin);
+		halfLeftMove.setDuration(halfStageDuration);
+
+		ObjectAnimator fullLeftMove = ObjectAnimator.ofFloat(button,
+				"translationX", rightOffset, leftOffset);
+		fullLeftMove.setDuration(fullStageDuration);
+
+		ObjectAnimator fullRightMove = ObjectAnimator.ofFloat(button,
+				"translationX", leftOffset, rightOffset);
+		fullRightMove.setDuration(fullStageDuration);
+
+		ObjectAnimator fullLeftMove2 = fullLeftMove.clone();
+		fullLeftMove2.setDuration(fullStageDuration);
+
+		ObjectAnimator halfRightMove2 = ObjectAnimator.ofFloat(button,
+				"translationX", leftOffset, origin);
+		halfRightMove2.setDuration(halfStageDuration);
+
+		AnimatorSet wobble = new AnimatorSet();
+
+		button.postDelayed(new Runnable() {
+		    @Override
+		    public void run() {
+		        button.setBackgroundResource(R.drawable.greenroundcorners);
+		    }
+		}, (4*fullStageDuration));
+
+		wobble.playSequentially(halfRightMove, fullLeftMove, fullRightMove, fullLeftMove2, halfRightMove2);
+
+		wobble.start();
+
 	}
 }
