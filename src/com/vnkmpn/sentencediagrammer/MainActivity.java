@@ -277,7 +277,7 @@ public class MainActivity extends Activity implements OnClickListener {
 			for (int i = 0; i < words.length; i++) {
 				String word = words[i];
 				ArrayList<String> types = lookUpWord(word);
-				if (types != null) {
+				if (types.size() > 0 ) {
 					String wordType = types.get(0).toLowerCase();
 					String color = "";
 					if (wordType.equals("noun")) {
@@ -299,8 +299,6 @@ public class MainActivity extends Activity implements OnClickListener {
 					/*for (int j = 0; j < types.size(); j++) {
 						//showMsg( words[i] + " is a " + types.get(j));
 					}*/
-				} else {
-					showMsg("word lookup failed - check your dictionary API Key");
 				}
 			}
 		}
