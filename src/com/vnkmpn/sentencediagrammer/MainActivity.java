@@ -17,6 +17,7 @@ import android.os.Bundle;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
+import android.text.Html;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
@@ -60,7 +61,7 @@ public class MainActivity extends Activity implements OnClickListener {
 			InputStream inputStream = getAssets().open("dictionary.properties");
 			Properties properties = new Properties();
 			properties.load(inputStream);
-			Log.d("Main","The properties are now loaded");
+			Log.d("Main","dictionary properties are loaded");
 			key = properties.getProperty("KEY");
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -159,10 +160,10 @@ public class MainActivity extends Activity implements OnClickListener {
 		stageTwo.start();
 
 		button.postDelayed(new Runnable() {
-		    @Override
-		    public void run() {
-		        button.setBackgroundResource(R.drawable.greenroundcorners);
-		    }
+			@Override
+			public void run() {
+				button.setBackgroundResource(R.drawable.greenroundcorners);
+			}
 		}, firstStageDuration + secondStageDuration);
 	}
 
@@ -233,11 +234,23 @@ public class MainActivity extends Activity implements OnClickListener {
 		}
 
 
+		@SuppressLint("DefaultLocale")
 		@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 		@Override
 		public void onResults(Bundle results) {
 			Log.d("Speech", "onResults");
 			recording(false);
+			String startFontTag = "<font color='";
+			String closeFont = "'>";
+			String endFontTag = "</font>";
+			String nounColor = "green";
+			String verbColor = "red";
+			String adjectiveColor = "yellow";
+
+			TextView sentenceView = (TextView)findViewById(R.id.sentenceText);
+			
+			/* clear the text view */
+			sentenceView.setText("");
 
 			float[] confidenceList = results.getFloatArray(SpeechRecognizer.CONFIDENCE_SCORES);
 			int bestGuessIndex = 0;
@@ -253,20 +266,39 @@ public class MainActivity extends Activity implements OnClickListener {
 			if (highestConfidence > .6) {
 				Log.d("Speech", "resultant string=" + strlist.get(bestGuessIndex) + ", with confidence of " + highestConfidence);
 				bestSentence = strlist.get(bestGuessIndex);
-				((TextView)findViewById(R.id.sentenceText)).append(bestSentence);
+				sentenceView.append(bestSentence);
 			} else {
 				Log.d("Speech", "low confidence");
 				showMsg( "Please say that again...");
 			}
-			String input = ((TextView)findViewById(R.id.sentenceText)).getText().toString();
+			String input = sentenceView.getText().toString();
 			String[] words = input.split( " " );
 
 			for (int i = 0; i < words.length; i++) {
-				ArrayList<String> types = lookUpWord(words[i]);
+				String word = words[i];
+				ArrayList<String> types = lookUpWord(word);
 				if (types != null) {
-					for (int j = 0; j < types.size(); j++) {
-						showMsg( words[i] + " is a " + types.get(j));
+					String wordType = types.get(0).toLowerCase();
+					String color = "";
+					if (wordType.equals("noun")) {
+						color = nounColor;
+					} else if (wordType.equals("verb")) {
+						color = verbColor;
+					} else if (wordType.equals("adjective")) {
+						color = adjectiveColor;
+					} else if (wordType.contains("article")) {
+						color = "gray";
+					} else if (wordType.equals("adverb")) {
+						color = "pink";
 					}
+					String colorizedWord = startFontTag + color + closeFont + word + endFontTag;
+					input = input.replaceAll(word, colorizedWord);
+
+					sentenceView.setText(Html.fromHtml(input));
+					
+					/*for (int j = 0; j < types.size(); j++) {
+						//showMsg( words[i] + " is a " + types.get(j));
+					}*/
 				} else {
 					showMsg("word lookup failed - check your dictionary API Key");
 				}
@@ -308,15 +340,14 @@ public class MainActivity extends Activity implements OnClickListener {
 
 		bounce.playSequentially(buttonMove, buttonMove2);
 		bounce.start();
-		
+
 		button.postDelayed(new Runnable() {
-		    @Override
-		    public void run() {
-		        button.setBackgroundResource(nextColor);
-		    }
+			@Override
+			public void run() {
+				button.setBackgroundResource(nextColor);
+			}
 		}, (2*duration));
 	}
-
 
 	public void signifyWarning() {
 		long halfStageDuration = 50;
@@ -326,7 +357,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		float origin = 0;
 
 		final ImageButton button = (ImageButton) findViewById(R.id.listenButton);
-		
+
 		button.setBackgroundResource(R.drawable.yellowroundcorners);
 
 		ObjectAnimator halfRightMove = ObjectAnimator.ofFloat(button,
@@ -355,10 +386,10 @@ public class MainActivity extends Activity implements OnClickListener {
 		AnimatorSet wobble = new AnimatorSet();
 
 		button.postDelayed(new Runnable() {
-		    @Override
-		    public void run() {
-		        button.setBackgroundResource(R.drawable.greenroundcorners);
-		    }
+			@Override
+			public void run() {
+				button.setBackgroundResource(R.drawable.greenroundcorners);
+			}
 		}, (4*fullStageDuration));
 
 		wobble.playSequentially(halfRightMove, fullLeftMove, fullRightMove, fullLeftMove2, halfRightMove2);

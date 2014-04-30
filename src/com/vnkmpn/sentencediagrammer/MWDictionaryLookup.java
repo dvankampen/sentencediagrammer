@@ -1,6 +1,7 @@
 package com.vnkmpn.sentencediagrammer;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -46,8 +47,8 @@ public class MWDictionaryLookup extends AsyncTask<String, Void, ArrayList<String
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.d("MWDict", "could not connect to dictionary site...");
+			return null;
 		}
 
 		StatusLine status = resp.getStatusLine();
@@ -90,7 +91,7 @@ public class MWDictionaryLookup extends AsyncTask<String, Void, ArrayList<String
 				{
 					Node child = elements.item(i).getChildNodes().item(0);
 					String text = child.getNodeValue();
-					Log.d("MWDict", word + "is a " + text);
+					Log.d("MWDict", word + " is a " + text);
 					speechTypes.add(text);
 				}
 			}
