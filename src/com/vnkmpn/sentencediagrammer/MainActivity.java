@@ -10,6 +10,7 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.ActionBar.LayoutParams;
 import android.app.Activity;
 import android.graphics.Typeface;
 import android.os.Build;
@@ -20,11 +21,15 @@ import android.speech.SpeechRecognizer;
 import android.text.Html;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -86,20 +91,44 @@ public class MainActivity extends Activity implements OnClickListener {
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		menu.add(0, CLEAR_MENU_ITEM, 0, "Clear");
-		menu.add(0, SAVE_MENU_ITEM, 0, "Save");
-		return super.onCreateOptionsMenu(menu);
+		MenuInflater menuInflater = getMenuInflater();
+        menuInflater.inflate(R.menu.main, menu);
+        return true;
 	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
-		case CLEAR_MENU_ITEM:
+		case R.id.menu_delete:
 			((TextView)findViewById(R.id.sentenceText)).setText("");
 			break;
-		case SAVE_MENU_ITEM:
+		case R.id.menu_save:
 			showMsg("Save");
 			break;
+		case R.id.menu_preferences:
+			showMsg("preferences!");
+			break;
+		case R.id.menu_about:
+			LayoutInflater layoutInflater 
+		     = (LayoutInflater)getBaseContext()
+		      .getSystemService(LAYOUT_INFLATER_SERVICE);  
+			View popupView = layoutInflater.inflate(R.layout.about_popup, null);  
+            final PopupWindow popupWindow = new PopupWindow(
+              popupView, 
+              LayoutParams.WRAP_CONTENT,  
+                    LayoutParams.WRAP_CONTENT); 
+            
+            Button btnDismiss = (Button)popupView.findViewById(R.id.dismiss);
+            btnDismiss.setOnClickListener(new Button.OnClickListener(){
+
+    @Override
+    public void onClick(View v) {
+     // TODO Auto-generated method stub
+     popupWindow.dismiss();
+    }});
+              
+            popupWindow.showAtLocation(this.findViewById(R.id.listenButton), Gravity.CENTER, 0, 0);
+            break;
 		default:
 			break;
 		}
