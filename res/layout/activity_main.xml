@@ -27,7 +27,8 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/listenButton" />
+        android:layout_below="@+id/listenButton"
+        android:textSize="@dimen/sentenceTextSize" />
 
     <TextView
         android:id="@+id/titleText"
