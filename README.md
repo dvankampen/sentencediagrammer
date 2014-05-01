@@ -1,7 +1,7 @@
 # README
 
 ## Configuring your Merriam Webster Dictionary Connection
-The Sentence diagramming application looks up words and gets their part of speech from a service provided by the[Merriam Webster developer API](http://www.dictionaryapi.com/).  Create an account on that site, and request a developer key.  Once you have an account and a key, you can view it any time using the "My Keys" link once you are signed in.  Copy that key, and paste it into assets/dictionary.properties in this project, formatting it like:
+The Sentence diagramming application looks up words and gets their part of speech from a service provided by the [Merriam Webster developer API](http://www.dictionaryapi.com/).  Create an account on that site, and request a developer key.  Once you have an account and a key, you can view it any time using the "My Keys" link once you are signed in.  Copy that key, and paste it into assets/dictionary.properties in this project, formatting it like:
 
 KEY=YOUR-KEY-HERE
 
