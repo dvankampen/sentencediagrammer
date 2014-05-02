@@ -80,7 +80,6 @@ public class MWDictionaryLookup extends AsyncTask<String, Void, ArrayList<String
 
 		}
 
-
 		NodeList elements = doc.getElementsByTagName("fl");
 		if (elements.getLength() > 0) {
 
@@ -91,7 +90,6 @@ public class MWDictionaryLookup extends AsyncTask<String, Void, ArrayList<String
 				{
 					Node child = elements.item(i).getChildNodes().item(0);
 					String text = child.getNodeValue();
-					Log.d("MWDict", word + " is a " + text);
 					speechTypes.add(text);
 				}
 			}

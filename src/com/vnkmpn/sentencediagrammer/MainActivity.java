@@ -15,6 +15,8 @@ import android.app.Activity;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
@@ -33,16 +35,84 @@ import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
+@SuppressLint("DefaultLocale")
 public class MainActivity extends Activity implements OnClickListener {
 
-	private static final int CLEAR_MENU_ITEM = Menu.FIRST;
-	private static final int SAVE_MENU_ITEM = CLEAR_MENU_ITEM + 1;
+	static TextView sentenceView;
 
 	private SpeechRecognizer sr;
 
-	private String key = "INVALID_KEY";
+	private static String key = "INVALID_KEY";
 
 	private SentenceRecognitionListener listener;
+
+	private static String[] words;
+	private static int wordIndex = 0;
+	private static final Handler updateSentenceViewHandler = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+			Log.d("Main" , "handling message of " + msg.obj.toString());
+			sentenceView.append(Html.fromHtml(msg.obj.toString()));
+			sentenceView.invalidate();
+			updateSentenceViewHandler.postDelayed(updateSentenceView,250);
+		}
+	};
+
+	private final static Runnable updateSentenceView = new Runnable() {
+
+		String startFontTag = "<font color='";
+		String closeFont = "'>";
+		String endFontTag = "</font>";
+		String nounColor = "green";
+		String verbColor = "red";
+		String adjectiveColor = "yellow";
+		String colorizedWord = "";
+
+		@SuppressLint("DefaultLocale")
+		@Override
+		public void run() {
+
+			if (wordIndex == (words.length) ) {
+				updateSentenceViewHandler.removeCallbacks(this);
+				return;
+			}
+
+			String word = words[wordIndex];
+			ArrayList<String> types = lookUpWord(word);
+			if (wordIndex == 0) {
+				word = word.substring(0, 1).toUpperCase() + word.substring(1);
+			}
+			if (wordIndex == (words.length - 1)) {
+				word = word.concat(".");
+			}
+			word = word.concat(" ");
+			if (types.size() > 0 ) {
+				String wordType = types.get(0).toLowerCase();
+				String color = "";
+				if (wordType.equals("noun")) {
+					color = nounColor;
+				} else if (wordType.equals("verb")) {
+					color = verbColor;
+				} else if (wordType.equals("adjective")) {
+					color = adjectiveColor;
+				} else if (wordType.contains("article")) {
+					color = "gray";
+				} else if (wordType.equals("adverb")) {
+					color = "pink";
+				}
+				colorizedWord = startFontTag + color + closeFont + word + endFontTag;
+			} else {
+				colorizedWord = word;
+			}
+			
+			Message msg = updateSentenceViewHandler.obtainMessage();
+			msg.obj = colorizedWord;
+
+			updateSentenceViewHandler.sendMessage(msg);
+			wordIndex++;
+		}
+	};
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -50,9 +120,11 @@ public class MainActivity extends Activity implements OnClickListener {
 		setContentView(R.layout.activity_main);
 
 		Typeface type = Typeface.createFromAsset(getAssets(),"fonts/RobotoCondensed-Regular.ttf"); 
-		((TextView)findViewById(R.id.titleText)).setTypeface(type);
 
-		((TextView)findViewById(R.id.sentenceText)).setTypeface(type);
+		sentenceView = (TextView)findViewById(R.id.sentenceText);
+		sentenceView.setTypeface(type);
+
+		sentenceView.setTypeface(type);
 
 		findViewById(R.id.listenButton).setOnClickListener(this);
 
@@ -74,7 +146,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		startAnimation();
 	}
 
-	private ArrayList<String> lookUpWord(String word) {
+	private static ArrayList<String> lookUpWord(String word) {
 		MWDictionaryLookup dict = (MWDictionaryLookup) new MWDictionaryLookup().execute(word, key);
 		ArrayList<String> types = null;
 		try {
@@ -92,8 +164,8 @@ public class MainActivity extends Activity implements OnClickListener {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuInflater menuInflater = getMenuInflater();
-        menuInflater.inflate(R.menu.main, menu);
-        return true;
+		menuInflater.inflate(R.menu.main, menu);
+		return true;
 	}
 
 	@Override
@@ -110,25 +182,25 @@ public class MainActivity extends Activity implements OnClickListener {
 			break;
 		case R.id.menu_about:
 			LayoutInflater layoutInflater 
-		     = (LayoutInflater)getBaseContext()
-		      .getSystemService(LAYOUT_INFLATER_SERVICE);  
+			= (LayoutInflater)getBaseContext()
+			.getSystemService(LAYOUT_INFLATER_SERVICE);  
 			View popupView = layoutInflater.inflate(R.layout.about_popup, null);  
-            final PopupWindow popupWindow = new PopupWindow(
-              popupView, 
-              LayoutParams.WRAP_CONTENT,  
-                    LayoutParams.WRAP_CONTENT); 
-            
-            Button btnDismiss = (Button)popupView.findViewById(R.id.dismiss);
-            btnDismiss.setOnClickListener(new Button.OnClickListener(){
+			final PopupWindow popupWindow = new PopupWindow(
+					popupView, 
+					LayoutParams.WRAP_CONTENT,  
+					LayoutParams.WRAP_CONTENT); 
 
-    @Override
-    public void onClick(View v) {
-     // TODO Auto-generated method stub
-     popupWindow.dismiss();
-    }});
-              
-            popupWindow.showAtLocation(this.findViewById(R.id.listenButton), Gravity.CENTER, 0, 0);
-            break;
+			Button btnDismiss = (Button)popupView.findViewById(R.id.dismiss);
+			btnDismiss.setOnClickListener(new Button.OnClickListener(){
+
+				@Override
+				public void onClick(View v) {
+					// TODO Auto-generated method stub
+					popupWindow.dismiss();
+				}});
+
+			popupWindow.showAtLocation(this.findViewById(R.id.listenButton), Gravity.CENTER, 0, 0);
+			break;
 		default:
 			break;
 		}
@@ -228,7 +300,6 @@ public class MainActivity extends Activity implements OnClickListener {
 
 			signifyWarning();
 
-
 			//recording(false);
 			switch (error)
 			{
@@ -269,17 +340,10 @@ public class MainActivity extends Activity implements OnClickListener {
 		public void onResults(Bundle results) {
 			Log.d("Speech", "onResults");
 			recording(false);
-			String startFontTag = "<font color='";
-			String closeFont = "'>";
-			String endFontTag = "</font>";
-			String nounColor = "green";
-			String verbColor = "red";
-			String adjectiveColor = "yellow";
 
-			TextView sentenceView = (TextView)findViewById(R.id.sentenceText);
-			
 			/* clear the text view */
 			sentenceView.setText("");
+			wordIndex = 0;
 
 			float[] confidenceList = results.getFloatArray(SpeechRecognizer.CONFIDENCE_SCORES);
 			int bestGuessIndex = 0;
@@ -295,42 +359,16 @@ public class MainActivity extends Activity implements OnClickListener {
 			if (highestConfidence > .6) {
 				Log.d("Speech", "resultant string=" + strlist.get(bestGuessIndex) + ", with confidence of " + highestConfidence);
 				bestSentence = strlist.get(bestGuessIndex);
-				sentenceView.append(bestSentence);
 			} else {
 				Log.d("Speech", "low confidence");
 				showMsg( "Please say that again...");
+				return;
 			}
-			String input = sentenceView.getText().toString();
-			String[] words = input.split( " " );
+			words = bestSentence.split( " " );
 
-			for (int i = 0; i < words.length; i++) {
-				String word = words[i];
-				ArrayList<String> types = lookUpWord(word);
-				if (types.size() > 0 ) {
-					String wordType = types.get(0).toLowerCase();
-					String color = "";
-					if (wordType.equals("noun")) {
-						color = nounColor;
-					} else if (wordType.equals("verb")) {
-						color = verbColor;
-					} else if (wordType.equals("adjective")) {
-						color = adjectiveColor;
-					} else if (wordType.contains("article")) {
-						color = "gray";
-					} else if (wordType.equals("adverb")) {
-						color = "pink";
-					}
-					String colorizedWord = startFontTag + color + closeFont + word + endFontTag;
-					input = input.replaceAll(word, colorizedWord);
-
-					sentenceView.setText(Html.fromHtml(input));
-					
-					/*for (int j = 0; j < types.size(); j++) {
-						//showMsg( words[i] + " is a " + types.get(j));
-					}*/
-				}
-			}
+			updateSentenceViewHandler.post(updateSentenceView);
 		}
+
 
 		@Override
 		public void onRmsChanged(float rmsdB) {
