@@ -1,4 +1,4 @@
-package com.vnkmpn.sentencediagrammer;
+package com.vnkmpn.sentencediagrammer.language;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,7 +25,7 @@ public class MWDictionary extends AsyncTask<String, Void, ArrayList<String>> {
 	
 	String key = "INVALID_KEY";
 	
-	MWDictionary(String key) {
+	public MWDictionary(String key) {
 		this.key = key;
 	}
 

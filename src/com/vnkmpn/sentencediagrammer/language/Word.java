@@ -1,11 +1,16 @@
-package com.vnkmpn.sentencediagrammer;
+package com.vnkmpn.sentencediagrammer.language;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.Log;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Properties;
 import java.util.concurrent.ExecutionException;
+
+import com.vnkmpn.sentencediagrammer.R;
 
 public class Word {
 	private String text = "";
@@ -14,10 +19,18 @@ public class Word {
 	private String key = "INVALID_KEY";
 	private Context ctx = null;
 
-	Word(Context context,String word, String dictionaryKey) {
+	public Word(Context context,String word) {
 		this.ctx = context;
 		this.text = word;
-		this.key = dictionaryKey;
+		
+		try {
+			InputStream inputStream = context.getAssets().open("dictionary.properties");
+			Properties properties = new Properties();
+			properties.load(inputStream);
+			this.key = properties.getProperty("KEY");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		this.types = lookUpWord(word);
 	}
 
@@ -36,7 +49,7 @@ public class Word {
 		return types;
 	}
 
-	public String getText() {
+	public String getPlaintext() {
 
 		return text.concat(" ");
 	}
@@ -49,7 +62,7 @@ public class Word {
 		return null;
 	}
 
-	public String colorize() {
+	public String getHtml() {
 		CharSequence color = "";
 		String startFontTag = "<font color='";
 		String closeFont = "'>";
@@ -73,11 +86,11 @@ public class Word {
 			} else if (type.equals("preposition")) {
 				color = ctx.getResources().getText(R.string.preposition);;
 			} else {
-				Log.d("Main",  this.getText() + " is a " + type);
+				Log.d("Main",  this.getPlaintext() + " is a " + type);
 			}
-			return startFontTag + color + closeFont + this.getText() + endFontTag;
+			return startFontTag + color + closeFont + this.getPlaintext() + endFontTag;
 		} else {
-			return "<b><u>" + this.getText() + "</u></b>";
+			return "<b><u>" + this.getPlaintext() + "</u></b>";
 		}
 	}
 

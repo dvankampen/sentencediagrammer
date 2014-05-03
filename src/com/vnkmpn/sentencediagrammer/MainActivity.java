@@ -1,9 +1,9 @@
 package com.vnkmpn.sentencediagrammer;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Properties;
+
+
+import com.vnkmpn.sentencediagrammer.language.Sentence;
 
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
@@ -11,11 +11,14 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.ActionBar.LayoutParams;
 import android.app.Activity;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
@@ -37,23 +40,25 @@ import android.widget.Toast;
 @SuppressLint("DefaultLocale")
 public class MainActivity extends Activity implements OnClickListener {
 
-	static TextView sentenceView;
+	private boolean liveDiagramming = true;
 
-	private SpeechRecognizer sr;	
+	private TextView sentenceView;
 
-	private SentenceRecognitionListener listener;
+	private SpeechRecognizer sr;
 
-	private static String[] words;
-	private static int wordIndex = 0;
-	private String key = "INVALID";
+	private Sentence sentence;
+
+	private ImageButton button;
+	
+	SharedPreferences sharedPrefs;
+
 	@SuppressLint("HandlerLeak")
 	private final Handler updateSentenceViewHandler = new Handler() {
 
 		@Override
 		public void handleMessage(Message msg) {
-			sentenceView.append(Html.fromHtml(msg.obj.toString()));
-			sentenceView.invalidate();
-			updateSentenceViewHandler.postDelayed(updateSentenceView,250);
+			appendHypertextToSentence(msg.obj.toString());
+			updateSentenceViewHandler.postDelayed(updateSentenceView,125);
 		}
 	};
 
@@ -63,24 +68,42 @@ public class MainActivity extends Activity implements OnClickListener {
 		@Override
 		public void run() {
 
-			if (wordIndex == (words.length) ) {
+			if (sentence.getRemainingWordCount() == 0 ) {
 				updateSentenceViewHandler.removeCallbacks(this);
 				return;
 			}
 
 			Message msg = updateSentenceViewHandler.obtainMessage();
-			msg.obj = new Word(getApplicationContext(), words[wordIndex], key).colorize();
+			msg.obj = sentence.removeWordAsHtml();
 
 			updateSentenceViewHandler.sendMessage(msg);
-			wordIndex++;
 		}
 	};
 
+	private Intent createRecognizerIntent() {
+		Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+		intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getApplicationContext().getPackageName());
+		intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+		intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+
+		intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
+
+		return intent;
+	}
+
+	protected void appendHypertextToSentence(String word) {
+		sentenceView.append(Html.fromHtml(word));
+		sentenceView.invalidate();
+	}
+
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
+	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		button = (ImageButton) findViewById(R.id.listenButton);
 
+		sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+		
 		Typeface type = Typeface.createFromAsset(getAssets(),"fonts/RobotoCondensed-Regular.ttf"); 
 
 		sentenceView = (TextView)findViewById(R.id.sentenceText);
@@ -91,20 +114,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		findViewById(R.id.listenButton).setOnClickListener(this);
 
 		sr = SpeechRecognizer.createSpeechRecognizer(getApplicationContext());
-
-		listener = new SentenceRecognitionListener();
-
-		sr.setRecognitionListener(listener);
-
-		try {
-			InputStream inputStream = getAssets().open("dictionary.properties");
-			Properties properties = new Properties();
-			properties.load(inputStream);
-			Log.d("Main","dictionary properties are loaded");
-			key = properties.getProperty("KEY");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		
 		startAnimation();
 	}
 
@@ -125,7 +135,9 @@ public class MainActivity extends Activity implements OnClickListener {
 			showMsg("Save");
 			break;
 		case R.id.menu_preferences:
-			showMsg("preferences!");
+			Intent intent = new Intent(MainActivity.this,
+					SettingsActivity.class);
+			startActivity(intent);
 			break;
 		case R.id.menu_about:
 			LayoutInflater layoutInflater 
@@ -142,7 +154,6 @@ public class MainActivity extends Activity implements OnClickListener {
 
 				@Override
 				public void onClick(View v) {
-					// TODO Auto-generated method stub
 					popupWindow.dismiss();
 				}});
 
@@ -162,12 +173,148 @@ public class MainActivity extends Activity implements OnClickListener {
 
 	public void onClick(View arg0) {
 		recording(true);
-		sr.startListening(RecognizerIntent.getVoiceDetailsIntent(getApplicationContext()));
+
+		startListening(sr);
 	}
 
+	private void startListening(final SpeechRecognizer sr) {
+		
+		liveDiagramming = sharedPrefs.getBoolean(SettingsFragment.KEY_PREF_LIVE_DIAG, false);
+		
+		Log.i("Main", "live diagramming is " + liveDiagramming);
 
-	public void setSentenceText(String text) {
-		((TextView)findViewById(R.id.sentenceText)).append(text);
+		/* clear the text view */
+		sentenceView.setText("");
+
+		sentence = new Sentence(this);
+
+		Intent intent = createRecognizerIntent();
+
+		final Runnable stopListening = new Runnable() {
+			@Override
+			public void run() {
+				sr.stopListening();
+			}
+		};
+		final Handler handler = new Handler();
+
+		sr.setRecognitionListener( new RecognitionListener() {
+
+			private String bestSentence = "";
+
+			private int wordCount = 0;
+
+			@Override
+			public void onBeginningOfSpeech() {
+				Log.d("Speech", "onBeginningOfSpeech");
+				bestSentence = "";
+			}
+
+			@Override
+			public void onBufferReceived(byte[] buffer) {
+				Log.d("Speech", "onBufferReceived");
+			}
+
+			@Override
+			public void onEndOfSpeech() {
+				Log.d("Speech", "onEndOfSpeech");
+				handler.removeCallbacks(stopListening);
+			}
+
+			@Override
+			public void onError(int error) {
+				Log.d("Speech", "onError");
+
+				signifyWarning();
+				handler.removeCallbacks(stopListening);
+
+				switch (error)
+				{
+				case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS:
+					Log.d("Speech", "insufficient permissions");
+					break;
+				case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
+					Log.d("Speech", "recognizer busy");
+					break;
+				case SpeechRecognizer.ERROR_SPEECH_TIMEOUT:
+					Log.d("Speech", "timeout");
+					break;
+				default:
+					Log.d("Speech", "error: " + error);
+					break;
+				}
+			}
+
+			@Override
+			public void onEvent(int eventType, Bundle params) {
+				Log.d("Speech", "onEvent");
+			}
+
+			@Override
+			public void onPartialResults(Bundle partialResults) {
+				Log.d("Speech", "onPartialResults");
+				if (liveDiagramming) {
+
+					ArrayList<String> results = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+					String partials = results.get(0);
+					if (!partials.equals("")) {
+						Log.i("Main", "partial results: " + partials + ".");
+						String[] words = partials.split(" ");
+						if (words.length > wordCount) {
+							if (words[wordCount] != null) {
+								Log.i("Main",  "adding word " + words[wordCount]);
+								sentence.addWord(words[wordCount]);
+								appendHypertextToSentence(sentence.removeWordAsHtml());
+								wordCount++;
+							}
+						}
+					}
+				}
+			}
+
+			@Override
+			public void onReadyForSpeech(Bundle params) {
+				Log.d("Speech", "onReadyForSpeech");
+			}
+
+			@SuppressLint("DefaultLocale")
+			@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+			@Override
+			public void onResults(Bundle results) {
+				Log.d("Speech", "onResults");
+				recording(false);
+
+				if (!liveDiagramming) {
+
+					float[] confidenceList = results.getFloatArray(SpeechRecognizer.CONFIDENCE_SCORES);
+					int bestGuessIndex = 0;
+					float highestConfidence = 0;
+					for (int i = 0; i < confidenceList.length; i++) {
+						if (confidenceList[i] >= highestConfidence) {
+							highestConfidence = confidenceList[i];
+							bestGuessIndex = i;
+						}
+					}
+					ArrayList<String> strlist = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+
+					if (highestConfidence > .6) {
+						Log.d("Speech", "resultant string=" + strlist.get(bestGuessIndex) + ", with confidence of " + highestConfidence);
+						bestSentence = strlist.get(bestGuessIndex);
+					} else {
+						Log.d("Speech", "low confidence");
+						showMsg( "Please say that again...");
+						return;
+					}
+
+					diagram(bestSentence);
+				}
+			}
+
+			@Override
+			public void onRmsChanged(float rmsdB) {
+			}
+		});
+		sr.startListening(intent);
 	}
 
 	@SuppressLint("NewApi")
@@ -176,7 +323,6 @@ public class MainActivity extends Activity implements OnClickListener {
 		long secondStageDuration = 500;
 		float firstStageDistance = -500f;
 		float secondStageDistance = 100f;
-		final ImageButton button = (ImageButton) findViewById(R.id.listenButton);
 		TextView titleText = (TextView) findViewById(R.id.titleText);
 
 		button.setEnabled(false);
@@ -199,12 +345,10 @@ public class MainActivity extends Activity implements OnClickListener {
 
 		stageOne.play(buttonDropIn).with(buttonFadeIn).with(titleFadeIn);
 
-
 		ObjectAnimator titleFadeOut = ObjectAnimator.ofFloat(titleText, "alpha",  1f, 0f);
 		titleFadeOut.setDuration(secondStageDuration);
 
 		AnimatorSet stageTwo = new AnimatorSet();
-
 
 		stageTwo.play(bounceUp).with(titleFadeOut).after(stageOne);
 		stageTwo.start();
@@ -217,112 +361,7 @@ public class MainActivity extends Activity implements OnClickListener {
 			}
 		}, firstStageDuration + secondStageDuration);
 
-		//diagramSentence("Egads the evil teacher assigns us work daily and expects it on his desk by eight the next morning");
-	}
-
-	/**
-	 * 
-	 * @author dave
-	 *
-	 */
-
-	class SentenceRecognitionListener implements RecognitionListener{
-
-		private String bestSentence = "";
-
-		@Override
-		public void onBeginningOfSpeech() {
-			Log.d("Speech", "onBeginningOfSpeech");
-			bestSentence = "";
-		}
-
-		@Override
-		public void onBufferReceived(byte[] buffer) {
-			Log.d("Speech", "onBufferReceived");
-		}
-
-		@Override
-		public void onEndOfSpeech() {
-			Log.d("Speech", "onEndOfSpeech");
-		}
-
-		@Override
-		public void onError(int error) {
-			Log.d("Speech", "onError");
-
-			signifyWarning();
-
-			//recording(false);
-			switch (error)
-			{
-			case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS:
-				Log.d("Speech", "insufficient permissions");
-				break;
-			case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
-				Log.d("Speech", "recognizer busy");
-				break;
-			case SpeechRecognizer.ERROR_SPEECH_TIMEOUT:
-				Log.d("Speech", "timeout");
-				break;
-			default:
-				Log.d("Speech", "error: " + error);
-				break;
-			}
-		}
-
-		@Override
-		public void onEvent(int eventType, Bundle params) {
-			Log.d("Speech", "onEvent");
-		}
-
-		@Override
-		public void onPartialResults(Bundle partialResults) {
-			Log.d("Speech", "onPartialResults");
-		}
-
-		@Override
-		public void onReadyForSpeech(Bundle params) {
-			Log.d("Speech", "onReadyForSpeech");
-		}
-
-
-		@SuppressLint("DefaultLocale")
-		@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-		@Override
-		public void onResults(Bundle results) {
-			Log.d("Speech", "onResults");
-			recording(false);
-
-			/* clear the text view */
-			sentenceView.setText("");
-			wordIndex = 0;
-
-			float[] confidenceList = results.getFloatArray(SpeechRecognizer.CONFIDENCE_SCORES);
-			int bestGuessIndex = 0;
-			float highestConfidence = 0;
-			for (int i = 0; i < confidenceList.length; i++) {
-				if (confidenceList[i] >= highestConfidence) {
-					highestConfidence = confidenceList[i];
-					bestGuessIndex = i;
-				}
-			}
-			ArrayList<String> strlist = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-
-			if (highestConfidence > .6) {
-				Log.d("Speech", "resultant string=" + strlist.get(bestGuessIndex) + ", with confidence of " + highestConfidence);
-				bestSentence = strlist.get(bestGuessIndex);
-			} else {
-				Log.d("Speech", "low confidence");
-				showMsg( "Please say that again...");
-				return;
-			}
-			diagramSentence(bestSentence);
-		}
-
-
-		@Override
-		public void onRmsChanged(float rmsdB) {
-		}
+		//diagram("Egads the evil teacher assigns us work daily and expects it on his desk by eight the next morning");
 	}
 
 	private void recording(boolean enabled) 
@@ -333,7 +372,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		float destination;
 		final int nextColor;
 
-		final ImageButton button = (ImageButton) findViewById(R.id.listenButton);
+		button.setEnabled(false);
 
 		origin = 0;
 		destination = distance;
@@ -360,13 +399,15 @@ public class MainActivity extends Activity implements OnClickListener {
 			@Override
 			public void run() {
 				button.setBackgroundResource(nextColor);
+				button.setEnabled(true);
 			}
 		}, (2*duration));
 	}
 
-	public void diagramSentence(String bestSentence) {
-		words = bestSentence.split( " " );
+	public void diagram(String bestSentence) {
+		sentence.addWords(bestSentence);
 
+		// start the UI update handler
 		updateSentenceViewHandler.post(updateSentenceView);
 	}
 
@@ -377,7 +418,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		float rightOffset = 25f;
 		float origin = 0;
 
-		final ImageButton button = (ImageButton) findViewById(R.id.listenButton);
+		button.setEnabled(false);
 
 		button.setBackgroundResource(R.drawable.yellowroundcorners);
 
@@ -410,6 +451,7 @@ public class MainActivity extends Activity implements OnClickListener {
 			@Override
 			public void run() {
 				button.setBackgroundResource(R.drawable.greenroundcorners);
+				button.setEnabled(true);
 			}
 		}, (4*fullStageDuration));
 
@@ -418,4 +460,6 @@ public class MainActivity extends Activity implements OnClickListener {
 		wobble.start();
 
 	}
+
+	
 }
