@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+   <string name="noun">#00FF00</string> <!--  lime -->
+   <string name="verb">#FF0000</string> <!--  red -->
+   <string name="adjective">#FFFF00</string> <!--  yellow -->
+   <string name="article">#808080</string> <!--  gray -->
+   <string name="adverb">#FFA500</string> <!--  orange -->
+   <string name="pronoun">#0000FF</string> <!--  blue -->
+   <string name="preposition">#98FB98</string> <!--  pale green -->
+   <string name="conjunction">#FF00FF</string> <!--  magenta -->
+   <string name="interjection">#008000</string><!--  green -->
+</resources>
+

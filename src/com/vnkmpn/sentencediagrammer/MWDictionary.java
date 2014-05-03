@@ -1,7 +1,6 @@
 package com.vnkmpn.sentencediagrammer;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -22,13 +21,18 @@ import org.xml.sax.SAXParseException;
 import android.os.AsyncTask;
 import android.util.Log;
 
-public class MWDictionaryLookup extends AsyncTask<String, Void, ArrayList<String>> {
+public class MWDictionary extends AsyncTask<String, Void, ArrayList<String>> {
+	
+	String key = "INVALID_KEY";
+	
+	MWDictionary(String key) {
+		this.key = key;
+	}
 
 	protected ArrayList<String> doInBackground(String... args) {
 		String leadingURL = "http://www.dictionaryapi.com/api/v1/references/collegiate/xml/";
 		String keyTag = "?key=";
 		String word = args[0];
-		String key = args[1];
 		if (key.equals("INVALID_KEY"))
 		{
 			Log.d("MWDict", "invalid key used, returning");

@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Properties;
-import java.util.concurrent.ExecutionException;
 
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
@@ -40,34 +39,25 @@ public class MainActivity extends Activity implements OnClickListener {
 
 	static TextView sentenceView;
 
-	private SpeechRecognizer sr;
-
-	private static String key = "INVALID_KEY";
+	private SpeechRecognizer sr;	
 
 	private SentenceRecognitionListener listener;
 
 	private static String[] words;
 	private static int wordIndex = 0;
-	private static final Handler updateSentenceViewHandler = new Handler() {
+	private String key = "INVALID";
+	@SuppressLint("HandlerLeak")
+	private final Handler updateSentenceViewHandler = new Handler() {
 
 		@Override
 		public void handleMessage(Message msg) {
-			Log.d("Main" , "handling message of " + msg.obj.toString());
 			sentenceView.append(Html.fromHtml(msg.obj.toString()));
 			sentenceView.invalidate();
 			updateSentenceViewHandler.postDelayed(updateSentenceView,250);
 		}
 	};
 
-	private final static Runnable updateSentenceView = new Runnable() {
-
-		String startFontTag = "<font color='";
-		String closeFont = "'>";
-		String endFontTag = "</font>";
-		String nounColor = "green";
-		String verbColor = "red";
-		String adjectiveColor = "yellow";
-		String colorizedWord = "";
+	private final Runnable updateSentenceView = new Runnable() {
 
 		@SuppressLint("DefaultLocale")
 		@Override
@@ -78,36 +68,8 @@ public class MainActivity extends Activity implements OnClickListener {
 				return;
 			}
 
-			String word = words[wordIndex];
-			ArrayList<String> types = lookUpWord(word);
-			if (wordIndex == 0) {
-				word = word.substring(0, 1).toUpperCase() + word.substring(1);
-			}
-			if (wordIndex == (words.length - 1)) {
-				word = word.concat(".");
-			}
-			word = word.concat(" ");
-			if (types.size() > 0 ) {
-				String wordType = types.get(0).toLowerCase();
-				String color = "";
-				if (wordType.equals("noun")) {
-					color = nounColor;
-				} else if (wordType.equals("verb")) {
-					color = verbColor;
-				} else if (wordType.equals("adjective")) {
-					color = adjectiveColor;
-				} else if (wordType.contains("article")) {
-					color = "gray";
-				} else if (wordType.equals("adverb")) {
-					color = "pink";
-				}
-				colorizedWord = startFontTag + color + closeFont + word + endFontTag;
-			} else {
-				colorizedWord = word;
-			}
-			
 			Message msg = updateSentenceViewHandler.obtainMessage();
-			msg.obj = colorizedWord;
+			msg.obj = new Word(getApplicationContext(), words[wordIndex], key).colorize();
 
 			updateSentenceViewHandler.sendMessage(msg);
 			wordIndex++;
@@ -144,21 +106,6 @@ public class MainActivity extends Activity implements OnClickListener {
 			e.printStackTrace();
 		}
 		startAnimation();
-	}
-
-	private static ArrayList<String> lookUpWord(String word) {
-		MWDictionaryLookup dict = (MWDictionaryLookup) new MWDictionaryLookup().execute(word, key);
-		ArrayList<String> types = null;
-		try {
-			types = dict.get();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return types;
 	}
 
 	@Override
@@ -232,6 +179,8 @@ public class MainActivity extends Activity implements OnClickListener {
 		final ImageButton button = (ImageButton) findViewById(R.id.listenButton);
 		TextView titleText = (TextView) findViewById(R.id.titleText);
 
+		button.setEnabled(false);
+
 		ObjectAnimator buttonDropIn = ObjectAnimator.ofFloat(button,
 				"translationY", firstStageDistance, secondStageDistance);
 		buttonDropIn.setDuration(firstStageDuration);
@@ -264,8 +213,11 @@ public class MainActivity extends Activity implements OnClickListener {
 			@Override
 			public void run() {
 				button.setBackgroundResource(R.drawable.greenroundcorners);
+				button.setEnabled(true);
 			}
 		}, firstStageDuration + secondStageDuration);
+
+		//diagramSentence("Egads the evil teacher assigns us work daily and expects it on his desk by eight the next morning");
 	}
 
 	/**
@@ -364,9 +316,7 @@ public class MainActivity extends Activity implements OnClickListener {
 				showMsg( "Please say that again...");
 				return;
 			}
-			words = bestSentence.split( " " );
-
-			updateSentenceViewHandler.post(updateSentenceView);
+			diagramSentence(bestSentence);
 		}
 
 
@@ -412,6 +362,12 @@ public class MainActivity extends Activity implements OnClickListener {
 				button.setBackgroundResource(nextColor);
 			}
 		}, (2*duration));
+	}
+
+	public void diagramSentence(String bestSentence) {
+		words = bestSentence.split( " " );
+
+		updateSentenceViewHandler.post(updateSentenceView);
 	}
 
 	public void signifyWarning() {
