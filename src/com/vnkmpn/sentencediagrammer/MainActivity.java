@@ -99,7 +99,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main);
+		setContentView(R.layout.main);
 		button = (ImageButton) findViewById(R.id.listenButton);
 
 		sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -108,8 +108,11 @@ public class MainActivity extends Activity implements OnClickListener {
 
 		sentenceView = (TextView)findViewById(R.id.sentenceText);
 		sentenceView.setTypeface(type);
+		sentenceView.setAlpha(0f);
 
-		sentenceView.setTypeface(type);
+		TextView titleText = (TextView)findViewById(R.id.titleText);
+		titleText.setTypeface(type);
+		titleText.setAlpha(0f);
 
 		findViewById(R.id.listenButton).setOnClickListener(this);
 
@@ -128,11 +131,8 @@ public class MainActivity extends Activity implements OnClickListener {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
-		case R.id.menu_delete:
+		case R.id.menu_clear:
 			((TextView)findViewById(R.id.sentenceText)).setText("");
-			break;
-		case R.id.menu_save:
-			showMsg("Save");
 			break;
 		case R.id.menu_preferences:
 			Intent intent = new Intent(MainActivity.this,
@@ -347,10 +347,13 @@ public class MainActivity extends Activity implements OnClickListener {
 
 		ObjectAnimator titleFadeOut = ObjectAnimator.ofFloat(titleText, "alpha",  1f, 0f);
 		titleFadeOut.setDuration(secondStageDuration);
+		
+		ObjectAnimator sentenceFadeIn = ObjectAnimator.ofFloat(sentenceView, "alpha",  0f, 1f);
+		sentenceFadeIn.setDuration(secondStageDuration);
 
 		AnimatorSet stageTwo = new AnimatorSet();
 
-		stageTwo.play(bounceUp).with(titleFadeOut).after(stageOne);
+		stageTwo.play(bounceUp).with(titleFadeOut).with(sentenceFadeIn).after(stageOne);
 		stageTwo.start();
 
 		button.postDelayed(new Runnable() {
@@ -405,6 +408,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	}
 
 	public void diagram(String bestSentence) {
+		sentence = new Sentence(this);
 		sentence.addWords(bestSentence);
 
 		// start the UI update handler

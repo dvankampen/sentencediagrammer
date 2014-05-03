@@ -4,5 +4,6 @@
     <string name="app_name">Sentence Diagrammer</string>
     <string name="action_settings">Settings</string>
     <string name="clearSentence">Clear Sentence</string>
+    <string name="starting_explanation">Please press the green microphone button to begin. Note that when you stop talking, it will automatically stop recording.</string>
 
 </resources>

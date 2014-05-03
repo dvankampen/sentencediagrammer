@@ -1,0 +1,1263 @@
+General coding documentation for 
+Merriam-Webster's Collegiate Dictionary
+including M-W font addresses
+
+#	modif 08.01.01 rdc
+#	enhanced 09.30.10 rdc
+
+****************************
+
+All files are well-formed XML files (no DTD).
+All field tags are enclosed in angle brackets; 
+	<...> is opening field tag; </...> is closing tag
+
+Temporary placeholder tags
+(such as to mark page beginnings/endings or
+position for math formulas) may appear as 
+paired tags with no context<...></...> or as an
+unpaired tag that with a slash at the end <.../> 
+
+Field tags enclose information that may be converted 
+to bold, italic, new paragraph, etc., depending 
+on the presentation requirements
+ie:
+<hw>...</hw> = boldface main entry word
+
+All special character coding follows SGML entity mnemonics 
+	or are patterned on SGML entity names and may be
+	enclosed in curly braces rather than SGML &...; delimiters
+	ie:
+	{aacute} = &aacute; = letter a with acute accent
+	{deg} = &deg; = temperature degree symbol
+	{ldquo} = &ldquo; = left double quote mark
+
+Since there is no literal use in the files of { or }, the 
+{...} tags, can be converted to &...; delimiters by a simple 
+search and replace.
+
+The PERL script mw2unico3.pl will convert M-W entity tags to Unicode numbers
+(available on request)
+
+***************
+
+General field codes
+
+NOTES FOR PRINTING:
+
+COMMA RULE
+if two fields which print italic come together, 
+such as <lb>...</lb> <sl>...</sl> 
+or <fl>...</fl> <lb>...</lb>
+they must be separated by a generated comma (+ space), 
+
+LIKELY COMBINATIONS ARE:
+<fl>...<lb>; <fl>...<sl>; <fl>...<sl>; <vt>...<sl>; 
+<fl>...(<in>)<il>; <lb>...<lb>; <lb>...<sl>; <slb>...<ssl>; 
+...</spl>(</sin>) <slb>; ...</spl>(</sin>) <ssl>; 
+<cat>...<cat>; ...</pl>(</cat>) <cat>; 
+<sd>...<ssl>; <sd>...<slb>; 
+<sd>...(<sin>)<il>; <sd>...(<sin>)<spl>; 
+
+if two fields which print small caps come together,
+such as <ct>...</ct> <ct>...</ct> 
+or <sx>...</sx> <sx>...</sx>
+or <sc>...</sc> <sc>...</sc>
+or <dxt>...</dxt> <dxt>...</dxt>
+they must be separated by a generated comma (+ space)
+
+LIKELY COMBINATIONS ARE:
+</ma> <ma>; </ct> <ct>; 
+</sx> <sx>; </sc> <sc>;
+</dxt> <dxt>; </ss> <us>; 
+</ss> <ss>; </sa> <sa>
+
+NOTE that when one <dxt> field is to be separated
+from the following one by a semicolon, that semicolon
+is already in the file
+
+Comma and space are also required between 
+certain roman subfields, such as:
+(<sx>)...</sxn> <sxn>...(</sx>); 
+(<dxt>)...</dxn> <dxn>...(</dxt>);
+(<ct>)...</ctn> <ctn>...(</ct>)
+
+NOTE FOR PRINTING:
+
+FL AND VT FIELDS
+In the file, when a verb entry has both 'vt' (transitive) and 'vi' (intransitive) subfields, 
+and the functional label field '<fl>' is separated from the first verb divider field '<vt>' 
+by any other elements to be displayed, the functional label will be 'vb' (verb) - and 
+that is how the data file is constructed; IN PRINT when there would be no separation, 
+to avoid having the 'vb' and 'vt' fields adjacent, the functional label will become 
+what would normally be in the first '<vt>' element and there is no first '<vt>' shown.
+
+In Web presentation, in the no-separation instance, this suppression is not necessary 
+IF the choice is to put the '<fl>' and '<vt>' fields on separate lines.
+
+
+NOTE FOR PRINTING:
+
+EM DASH RULE
+em dashes ({mdash} or &mdash;) will be lightface throughout and 
+will have a space before and after EXCEPT in the case
+of the <aq> field; here there is a space before but
+not after.
+
+If two or more fields that normally generate 
+an opening lightface em dash come together 
+within the <dt> field, (ie, <un>, <ca>, <dx>) 
+only the first generates an em dash. 
+See under SEMICOLON RULE below
+
+NOTE FOR PRINTING:
+
+SEMICOLON RULE
+When two <in> fields come together, they must be separated
+by a generated semicolon (+ space); semicolon to match preceding
+font weight: bold after boldface, otherwise lightface
+EXAMPLE:
+(<in>)<if>...(</in>)(<in>)<if>... -- semicolon is bold
+(<in>)<if>)...<pr>...(</in>)(<in>)<if> -- semicolon 
+is default roman after pronunciation
+
+When any of these subfields (<un> <ca> <dx>), which would 
+generate an em dash on first occurrence, follow 
+one another within a single <dt> field, 
+these subfields must be separated instead of
+generating new em dashes after the first. 
+
+NOTE that the semicolon must match the type weight/style 
+of the preceding text: roman after roman text, 
+italic after italic text, etc.
+
+FOR EXAMPLE:
+<un>usu. used...</un> <ca>called also...</ca> <dx>compare...</dx>
+would be:
+-- usu. used...; called also ...; compare ... 
+or
+<un>usu. used ...</un> <un>usu. considered ...</un>
+would be:
+-- usu. used ...; usu. considered ...
+
+LIKELY COMBINATIONS ARE:
+<un>...<un>; <un>...<ca>; <un>...<dx>; 
+<ca>...<dx>; <dx>...<dx>
+
+NOTE FOR PRINTING:
+
+<AHW> RULE
+Whenever a <ahw> field occurs, it must be separated
+from the preceding field by a comma (+ space), 
+boldface if following boldface text, otherwise lightface
+EXAMPLE:
+<hw>...<ahw> -- comma is bold
+<hw>...<pr>...<ahw> -- comma is default roman
+
+NOTE FOR PRINTING:
+
+SPACE RULE
+Before the sole defining text (<dt>) field of an entry or
+before any <sn> field, there needs to be a fixed space 
+(in addition to a normal word space). 
+Between a <sn> field and the following <dt> field can be 
+a single word space
+NOTE that this fixed space may not carry over to the next line
+if there is a line break before the <dt> or <sn>
+
+NOTE there can be a single word space before {bc} (or &bc;) 
+which does not come immediately after <dt> tag 
+(as when there is more than one {bc} (or &bc;) in a
+single <dt> field). Following a {bc} (or &bc;) there must be 
+a "no break space", for the bold colon may not 
+come at the end of a line.
+
+NOTE FOR PRINTING:
+
+HYPHEN RULE
+A hyphen in the following instances must be 
+a no-break hyphen:
+- hyphen immediately following a space
+- hyphen immediately following a <pr> tag, which converts to "\"
+- hyphen immediately before a </pr> tag, which converts to "\"
+- hyphen within a <pr> field that appears inside parentheses: 
+	for example <pr>...(-e)...</pr>
+
+NOTE FOR PRINTING:
+
+LINE BREAKS FOR BOLDFACE WORDS
+Boldface words -- wherever they appear -- can be broken only
+at the point where the hyphenation point appears (in this file, 
+asterisk standing for centered dot, {point}). 
+
+(All boldface words with hyphenation points may be used
+as a table for hyphenation of any word in the dictionary). 
+
+Those bold words with multiple positions indicated 
+for the same spelling: for example, the noun "rec*ord" and 
+the verb "re*cord", have to be done "by hand". 
+
+If there is no hyphenation point in the word in question 
+but there is one in the same spelling earlier in the entry 
+or in a prior entry, that indicated point may be used for hyphenation. 
+
+If there is no hyphenation point shown at all, (that is, in 
+any boldface spelling of the word) the word may not be broken. 
+
+When a bold word is broken at an indicated hyphenation point, 
+the asterisk (or centered dot {point}) is replaced by 
+a regular hyphen. 
+
+Boldface words that include an en dash ({ndash} or &ndash;)
+can be broken on the {ndash}, which is retained at end of line.
+
+In Pronunciations <pr>...</pr> or <sp>...</sp>
+end-of-line break is permitted on any space and on 
+any hyphen followed by a space and 
+on any hyphen with a letter on both sides.
+
+End-of-line break is NOT permitted in pronunciations on a 
+hyphen that is preceded by a space or that is the first or last character
+in a pronunciation (as <pr>- or -</pr>) or that is inside parentheses 
+- parenthetical elements within pronunciations may not be broken across lines
+
+NOTE FOR PRINTING:
+LINKS
+In the data file are links used for electronic presentation: 
+These are '<d_link>', '<i_link>', '<dx_ety>', and '<dx_def>'. 
+The ref="..." links to the main entry id.
+
+These fields are all to be eliminated in print. 
+Likewise the field '<quote>' is eliminated in print.
+
+NOTES FOR PRINTING:
+<et> and <pr> fields
+In the data may be <et mode="dig"> and <pr mode="pr"> and <pr mode="dig">,
+indicating digital/electronic presentation or print. For print, all elements
+with the attribute mode="dig" are to be ignored. For electronic presentation, where 
+there are duplicated elements and one had mode="pr", that will be ignored. 
+
+Where there are no attributes, the elements are usable 
+for both print and electronic presentation.
+
+
+*****************************
+
+#	[data field tags]
+
+<alpha...>		alpha section root
+	contains as elements: entry or comment
+	contains as attributes: letter and tt
+	The alpha element may be used in print
+	to generate the opening letter of an alpha section.
+
+<entry...>...</entry>
+	Dictionary ENTRY	umbrella field
+	id="..." is unformatted/plain text version of headword for searching/indexing
+	priting: begin new paragraph with hanging indent
+	-- contains all of the fields 
+	 that may be found in a dictionary entry
+<art...>...</art>	umbrella field for art references
+	- <artref id="...">  references separate ART FILEs
+	- <capt>...</  art CAPTION
+	- <dim> art hole DIMENSIONS 
+		 dimensions indicate the art runaround in points wide 
+		  (right indent) and number of lines deep 
+		   (allowing for caption)
+<table ...></table>	(no text -- contains table id reference)
+	- id="..." references separate table files
+	- umbrella field for 
+		<dim>...</dim> DIMENSIONS for table indicate 
+			points wide and lines deep
+<formula...></formula>	(no text -- contains formula id reference)
+	-- id=... references compositor's separate formula files
+	-- umbrella field for 
+		<dim>...</dim> DIMENSION gives dimensions for formula drop 
+			in points wide and lines deep
+	-- math formula goes in position marked by empty <math></math> tags below
+<hw>...</hw>	(text = boldface)
+	HEADWORD
+	- This is the first bold word in an entry
+	- contains "syllable" break points (that is, 
+	  end-of-line hyphenation points) here indicated 
+	  by asterisks, which will translate to raised dot, 
+	  {point} in Merriam-Webster font. 
+	- may contain superscript homograph numbers 
+	  {h,1}, {h,2}, etc., in the same font (bold)
+	- single word space after <hw> field
+<pr>...</pr>	(text = roman)
+	PRONUNCIATION field
+	-- tags must generate opening and closing 
+	  backward slash (back solidus = {bsol} ) 
+	-- single word space after <pr> field
+	Without attribute may be used for print or electronic products
+<pr mode="dig">...</pr>	(text = roman)
+	PRONUNCIATION field for electronic products use only
+	-- tags must generate opening and closing 
+	  backward slash (back solidus = {bsol} ) 
+	-- single word space after <pr> field
+<pr mode="pr">...</pr>	(text = roman)
+	PRONUNCIATION field for print products use only
+	-- tags must generate opening and closing 
+	  backward slash (back solidus = {bsol} ) 
+	-- single word space after <pr> field
+<ahw>...</ahw>	(text = boldface)
+	ALTERNATE HEADWORD
+	--boldface word that MAY follow the headword
+	  or the pronunciation field after a headword
+	-- needs a generated comma (+ space) to separate from previous
+	  field element, whether <hw> or <pr> or another <ahw>
+	  (bold comma if immediately after boldface, 
+	  roman otherwise)
+	-- single word space after last <ahw> field
+<subj>...</subj>	(ignore -- does not print)
+	non-printing field for in-house use only 
+<fl>...</fl>	(text = italic)
+	FUNCTIONAL LABEL field (part of speech, etc.) 
+	-- italic ("n", "vb", " n pl", "adj or n", "trademark", etc)
+	-- single word space after <fl> field, unless 
+	  COMMA RULE applies (see above)
+<vr>...</vr>	(no text)
+	VARIANT SPELLING field (empty umbrella field), 
+	contains:
+	<vl>...</vl>	(text = italic)
+		VARIANT LABEL ("or", "also", "or chiefly Brit", etc)
+		-- single word space follows
+	<va>...</va>	(text = bold)
+		VARIANT FORM
+		-- single word space follows 
+	<pr>...</pr>	(text = roman)
+		PRONUNCIATION (optional) - see <pr> above
+		-- single word space follows
+	NOTE:	in the <vr> field the <pr> element is optional, and
+	  can appear only after <va>; 
+	The (<vl>,<va>,<pr>) pattern is repeatable within <va> field
+	See also <svr> below
+	-- single word space follows <vr> field
+<in>...</in>	(no text)
+	INFLECTION field, (empty umbrella field), 
+	contains:
+	<il>...</il>	(text = italic)
+		INFLECTION LABEL ("pl", "or", etc.)
+		-- single word space follows
+	<if>...</if>	(text = bold)
+	 	boldface inflected form 
+		-- single word space follows unless SEMICOLON RULE applies
+	<pr>...</pr>	(text = roman)
+	 	pronunciation (optional) - see <pr> above
+		-- single word space follows unless SEMICOLON RULE applies
+	NOTE: in the <in> field the <il> item is optional 
+	  but if it appears must be followed 
+	  by <if>; the <pr> element is optional, and
+	  can appear only after <if>
+	The (<il><if><pr>) pattern is repeatable within <in>;
+	The <in> field is repeatable, and two <in> fields 
+	  must be separated by a generated semicolon (see note above)
+	-- single word space follows <in> field unless 
+	  SEMICOLON RULE applies
+	See also <sin> below
+<lb>...</lb>
+	LABEL for "cap" or "often attrib" - (text = italic)
+	-- single word space follows unless COMMA RULE applies
+<sl>...</sl>
+	SUBJECT/STATUS LABEL (as "archaic", "Brit", "of a cell")
+	-- prints italic 
+	-- single word space follows unless COMMA RULE applies
+<et>...</et>
+	ETYMOLOGY - usable for both print and electronic
+	-- tags to generate opening and closing bold square brackets
+	-- may contain <ma>...</ma> element
+	<ma>...</ma>	MORE AT
+	  opening tag to generate introductory em dash 
+	  followed by words "more at " (roman)
+	  and then the contained word in small caps; ie:
+	  <ma>shoe</ma> => -- more at SHOE
+	-- single word space follows <et> field
+<et mode="dig">...</et>
+	ETYMOLOGY for electronic products use only
+
+<cx>...</cx>	(no text)
+	COGNATE CROSS-ENTRY  (empty umbrella field), 
+	contains
+	<cl>...</cl>	(text = italic)
+		cognate label
+		-- single word space follows
+	<ct>...</ct>	(text = small caps except after <ctn>)
+		cognate target word 
+	  (small caps ends with first </ct> or <ctn> tag)	
+	<ct> field may contain <ctn>... field which defaults back to roman
+	  <ctn>...</ctn> (text = roman)
+	  	CROSS-TARGET NUMBER 
+		- if two or more <ctn> fields come together, COMMA RULE applies
+	- The <ct> fields may repeat, and if so, COMMA RULE applies
+	- single word space follows <cx> field
+<def>...</def>	(empty umbrella field)
+	definition element field - umbrella field
+	- contains: <vt>, <date>, <sense>
+<vt>...</vt>
+	VERB DIVIDER	(text = italic)
+		(comparable to <fl> field)
+	-- contains "vi" or "vt" labels for verb entries
+	-- single word space follows <vt> field
+	NOTE: Any <vt> field that occurs AFTER a <dt> field0
+	  needs a generated opening bold swung dash
+<date>...</date>	(text = roman)
+	field for DATE of first recorded use
+	-- tags must generate opening and closing parentheses
+	-- single word space follows <date> field
+<sense...>...</sense>
+	umbrella field around individual senses (meanings)
+	contains <dt> and may contain as elements:
+	sn , sp, sp_alt, sp_ipa, sp_wod, sound, svr, sin, slb, set, ssl, sd, sp, sp_alt, sp_ipa, sp_wod, slb, ssl
+	may contain as attribute: snumb="...", that IDs full sense number, which in <sn> field may be abbreviated
+
+<sn>...</sn>	(text = bold except after <snp>)
+	SENSE NUMBER
+	 sense number or sense letter
+	   (bold text ends with first </sn> or <snp> tag)
+	 - may contain <snp> subfield which defaults back to roman
+	 <snp>...</snp> (text = roman)
+	 -	<snp> field contains a numeral in parentheses 
+	 (parens in the file) and defaults out of bold to default roman
+	- See SPACE RULE above
+<svr>...</svr>	(no text)
+	SENSE-SPECIFIC VARIANT FIELD (empty umbrella field),
+	similary to the <vr> field:  
+	contains:
+	  (<vl>, <va>, <pr>, <vpl>) 
+	NOTE: in this field, the <vpl> prints italic and 
+	may follow the <va> (or <va>...</pr>) or may stand alone
+	(analogous to the <spl> in the <sin> field)
+	- single word space after <svr> field
+<sin>...</sin>	(no text)
+	SENSE-SPECIFIC INFLECTION FIELD (empty umbrella field), 
+	similar to the <in> field with addition of <spl> field
+	contains:
+	(<il>, <if>, <pr>, <spl>)
+	The <spl>...<spl> field prints italic and may 
+	  follow the <if>  (or <if>...</pr>) or may stand alone
+	-- single word space follows <sin> field
+<sp>...</sp>	(text = roman)
+	SENSE-SPECIFIC PRONUNCIATION -- equivalent to <pr> field 
+	-- tags generate opening and closing backward slash {bsol}
+	-- not a part of other sense-specific fields
+	-- single word space follows <sp> field
+	- may occur only in W3 data
+<slb>...</slb>	(text = italic)
+	SENSE-SPECIFIC LABEL ("cap", "usu cap") 
+	-- single word space follows unless COMMA RULE applies
+<set>...</set>
+	SENSE-SPECIFIC ETYMOLOGY 
+	-- same as <et>...</et> field
+	-- tags generate opening and closing bold square brackets
+	-- single word space follows <set> field
+<ssl>...</ssl>	(text = italics)
+	SENSE SUBJECT/STATUS LABEL
+	("slang", "Brit", "archaic") 
+	-- single word space follows unless COMMA RULE applies
+<dx>		directional cross-ref unbrella
+		text prints default roman
+		contains dxt and may contain it
+
+<dxn>	directional cross-ref number
+		text prints default roman
+
+<dxt>	directional cross-ref target
+		text prints small caps
+		may contain dxn , inf
+
+<dx_def>	directional cross-ref/definition
+		text prints default roman
+		contains dxt and may contain it
+
+<dx_ety>	directional cross-ref/etymology
+		text prints default roman
+		contains dxt and may contain it
+
+<dt mode="dig">	defining text for electronic/digital only
+<dt mode="pr">	defining text for print only
+
+<dt>...</dt>	(text = roman)	(also applies to <dt mode="..."> )
+	DEFINING TEXT - usable for both print and electronic
+	- single space after <dt> field unless followed by <sd> field
+	- Encloses every definitional element, including 
+	  abbreviation expansion, written out definitions, 
+	  and synonymous cross-references
+	Contains:
+
+	{bc}
+	BOLDFACE COLON (has special significance)
+	-- requires no-break space after
+
+	<sx>...</sx>	(text = small caps except after <sxn>)
+	| SYNONYMOUS CROSS REF TARGET --small caps
+	|  (small caps ends with first </sx> or <sxn> tag)
+	| -- may contain one or more <sxn> subfields
+	| -- single word space follows unless COMMA RULE applies
+	|
+	|<sxn>...</sxn>	(text = roman)
+	|  SYNONYMOUS CROSS REF SENSE NUMBER 
+	|  (defaults out of small caps to normal roman)
+	|  if two or more <sxn> fields occur together
+	|   they must be separated by a generated comma (+ space)
+
+	<un>...</un>	(text = roman)
+	| USAGE NOTE, following or replacing defining text;
+	| first occurrence introduced by a light em dash 
+	|   (implied by the opening tag)	
+    | <un> field may contain one or more <vi> fields
+	| - followed by single space unless COMMA RULE applies
+
+	<ca>...</ca>	(text = roman)
+	| CALLED ALSO element; 
+	| contains words "called also " and one or more <cat> subfields
+	|	and possibly <pr> fields
+	|  -- first occurrence, if there is no prior <un> field, 
+	|    generates opening light em dash
+	| - followed by single space unless COMMA RULE applies
+	|
+	|<cat>...</cat>	(text = italic)
+	|  CALLED ALSO TARGET
+	|  Two or more <cat> fields need to be 
+	|    separated by a generated comma
+	|	-- if a <pr> field comes between two <cat> fields
+	|	the comma separates <pr> field from following <cat> field
+
+	<vi>...</vi>	(text = roman)
+	|VERBAL ILLUSTRATION
+	|-- tags must generate opening and closing angle brackets
+	| may contain <aq> subfield
+	| -- single word space follows <vi> field
+	|
+	|<aq>...</aq>	(text = roman)
+	|  AUTHOR QUOTED 
+	|  --opening tag must generate lightface em dash, 
+	|  (space before, no space after)
+
+	<dx>...</dx>	(text = roman)
+	| DIRECTIONAL CROSS-REFERENCE
+	| -- contains words "see" or "compare" and <dxt> subfield(s)
+	| -- single word space follows <dx> field unless SEMICOLON RULE applies
+	| -- first occurrence (if there is no prior <un> or <ca>) 
+	|		generates initial light em dash;
+	| See COMMA RULE above
+	|
+	|<dxt>...</dxt>	(text = small caps)
+	| target word/element; 
+	| (small caps ends with first </dxt> or <dxn> tag)	
+	| -- <dxt> field may contain <dxn> subfield
+	|
+	|<dxn>...</dxn>	(text = roman)
+	|  DIRECTIONAL CROSS REF NUMBER
+	|  (defaults out of small caps to normal roman)
+	|  -- used for cross-ref sense number (numeral) or 
+	|  a word like "table" or "illustration" that is part 
+	|  of the target
+
+	|<sd>...</sd>	(text = italic)
+	| SENSE DIVIDER ("also", "esp", "specif", "broadly") 
+	| -- opening tag must generate a semicolon (+ space) to
+	|   separate this from previous text
+	| -- single word space follows, unless COMMA RULE applies
+
+	<math></math>	(no text)
+		empty field to mark place within the <dt> field for 
+		inserting math formula id'd in <formula> field
+
+<uro>...</uro>	(no text)
+	UNDEFINED RUN-ON ENTRY (empty umbrella field)
+	-- opening tag must generate a 
+	 light em dash (space on either side)
+	contains:
+	|
+	|<ure>...</ure>	BOLDFACE entry word 
+	|<uro> field may also contain any of the following:
+	| <vr>...</vr>, <in>...</in>, <pr>...</pr>, 
+	| <fl>...</fl>, <lb>...</lb>, <sl>...</sl> 
+	| -- single word space follows <uro> field
+
+<dro>...</dro> 	(no text)
+	DEFINED RUN-ON ENTRY (empty umbrella field)
+	-- opening tag must generate a 
+	 light em dash (space on either side)
+	contains:
+	|
+	|<drp>...</drp> DEFINED RUN-ON PHRASE (boldface)
+	| and may contain <vr>, <et>, <def> fields
+	| -- single word space follows <dro> field
+
+<us>...</us>	(text = small caps)
+	USAGE SEE CROSS-REF 
+	-- run in after en space plus word space
+	-- opening tag must generate bold italic "usage " 
+	  and normal roman "see " 
+	  followed by enclosed word in small caps:
+	for example: <us>{h,2}a</us> => bold italic "usage " 
+	  roman "see " superscript "2" small caps "a"
+
+<ss>...</ss>	(text = small caps)
+	SYNONYM SEE CROSS-REF 
+	-- run in after en space plus word space
+	-- opening tag must generate bold italic "syn " 
+	  and normal roman "see "
+	  followed by enclosed word in small caps:
+	for example: <ss>embarrass</ss> => syn see EMBARRASS
+
+<sa>...</sa>	(text = small caps)
+	SYNONYM SEE IN ADDITION REF 
+	-- run in after synonym paragraph (<pt>...</pt>)
+	-- opening tag must generate bold italic "syn "
+	  followed by roman "see in addition ", 
+	  followed by enclosed word in small caps: 
+	for example:	<sa>increase</sa> => syn see in addition INCREASE
+
+<pl>...</pl>	(text = bold italic)
+	PARAGRAPH LABEL ("usage", "syn")
+	-- begins new line and begins block indent 
+	  within the entry paragraph
+	-- single word space follows
+
+<pt>...</pt>	(text = roman)
+	PARAGRAPH TEXT (usage paragraph or synonym paragraph)
+	-- runs in after <pl>...</pl> and is the 
+	  roman text of the block indent paragraph
+	  -- may contain <vi> fields
+	- more than one <pl>...</pt> combinations may occur in a single entry
+	 and each sets in a new block indent
+
+<list>...</list>	(no text)
+	LIST OF SELF-EXPLANATORY UNDEFINED WORDS 
+	-- contains series of <item>s
+	|<item>...</item>	(text = boldface)
+	|-- in the book sets in a small-type list
+	|-- see the book treatment at "anti-"
+
+<note>...</note> special fist note at "number" entry
+<sup>...</sup> superior/superscript
+<inf>...</inf> inferior/subscript
+<it>...</it> italic text
+<sc>...</sc> small caps text -- used in <pr> and <pt> fields
+<rom>...</rom>	roman text in an otherwise non-roman field
+<bold>...</bold> bold face in non-bold field (Medict)
+<bit>...</bit> bold italic (Medict)
+<isc>...</isc> italic small caps (Medict)
+******************************************
+
+Special character codes
+
+These are modeled on SGML convention
+  but here are marked with {...} rather than the
+  &...; delimiters of SGML. A simple search and replace can
+  change them to SGML entities, since there is no
+  literal use in the file of curly braces or the ampersand
+  - the program mw2sgml.exe does this conversion for most entities,
+  except {h,_} and {frac_/_} and {break}
+
+Greek characters are shown at the end
+
+#Here reference is made to the character position 
+# in the Merriam-Webster font(s) MW_FONT ....: 
+# r.... stands for regular
+# x.... stands for extended
+# i.... stands for IPA
+# (the font number indication is the same whether
+# bold, italic, roman, or small caps)
+# NOTE -- small caps characters have different official name
+#	but the mnemonic is the same
+# NOTE -- italic r0130, r0131, r0133 are different characters
+# 	from roman counterparts; italic r0130 is {schwagrv} vs {hstres};
+#	italic r0131 is {openoac} vs {lstres}; italic r0133 is {schwaac}
+#	vs (schwadot}
+#
+#The four digit number is the decimal position within the font:
+# (refer to the font map).  (Font numbering is based on PC format)
+#
+# Thus, 
+# r0036 is decimal position 36 in the regular set
+# 	-- the number sign/hash mark
+# r0130 is decimal position 130 in the regular set
+# 	-- the high stress mark
+# x0137 is decimal position 137 in the extended set
+#	-- the copyright symbol
+# i0214 is decimal postion 214 in the IPA set
+# 	-- the pound Sterling currency symbol
+#
+{aacute}	letter a with acute accent MW_FONT r0225
+{Aacute}	letter A with acute accent MW_FONT r0193
+{abreve}	letter a with breve over MW_FONT x0035
+{Abreve}	letter A with breve over MW_FONT x0034
+{acedil}	letter a with cedilla MW_FONT x0209
+{acirc}		letter a with circumflex MW_FONT r0226
+{Acirc}		letter A with circumflex MW_FONT r0194
+{acrcudot}	letter a with circumflex over and dot under MW_FONT x0183
+{acute}		floating acute accent MW_FONT i0146
+{adot}		letter a with single dot over MW_FONT r0146
+{aelig}		ligatured ae MW_FONT r0230
+{AElig}		ligatured AE MW_FONT r0198
+{aeligac}	ligatured ae with acute accent MW_FONT x0115
+{aeligm}	ligatured ae with macron over MW_FONT x0108
+{agrave}	letter a with grave accent MW_FONT r0224
+{Agrave}	letter A with grave accent MW_FONT r0192
+{ahacek}	letter a with hacek/caron over MW_FONT x0103
+{ahook}		letter a with hook under MW_FONT x0037
+{Ahook}		letter A with hook under MW_FONT x0036
+{ahookac}	letter a with hook under and acute over MW_FONT x0182
+{amacr}		letter a with macron over MW_FONT r0134
+{Amacr}		letter A with macron over MW_FONT x0033
+{amactil} 	letter a with macron and tilde over MW_FONT x0184
+{amp}		ampersand MW_FONT r0038
+{apos}		apostrophe MW_FONT r0156
+{aposapos}	Egyptian stacked apostrophe MW_FONT i0076
+{aquarius}	Aquarius symbol MW_FONT i0250
+{arch}		inverted breve MW_FONT i0156
+{aries}		Aries symbol MW_FONT i0240
+{aring}		letter a with ring symbol over MW_FONT r0229
+{Aring}	    letter A with ring symbol over MW_FONT r0197
+{ascitild}	ascii tilde (keyboard) MW_FONT r0126
+{ascicirc}	ascii circumflex (keyboard) MW_FONT r0094
+{ast}		asterisk MW_FONT r0042
+{atilde}	letter a with tilde over MW_FONT r0227
+{Atilde}	letter A with tilde over MW_FONT r0195
+{Audot}		letter A with dot under MW_FONT x0208
+{auline}	letter a with underline MW_FONT x0210
+{auml}		letter a with diaeresis/umlaut MW_FONT r0228
+{Auml}		letter A with diaeresis/umlaut MW_FONT r0196
+{austral}	Austral currency symbol MW_FONT i0220
+{ayn}		Arabic phonetic breath mark MW_FONT i0075
+
+{bbar}		letter b with horizontal bar MW_FONT x0101
+{bc}		normal boldface colon plus no-break space (MW_FONT r0058)+(MW_FONT x0160)
+{bcirc}		letter b with circumflex MW_FONT x0211
+{breve}		floating breve (no letter) MW_FONT i0150
+{brvbar}	broken vertical bar MW_FONT i0252
+{bsol}		back solidus MW_FONT r0092
+{bull}		bullet MW_FONT x0145
+{bs}		Binding Substitute - ignore - does not print
+
+{cacute}	letter c with acute accent over MW_FONT x0039
+{Cacute}	letter C with acute accent over MW_FONT x0038
+{cancer}	Cancer symbol MW_FONT i0243
+{cap}		math cap MW_FONT x0155
+{capos}		letter c with apostrophe over MW_FONT x0185
+{capicorn}	Capricorn symbol MW_FONT i0249
+{ccedil}	letter c with cedilla MW_FONT r0231
+{Ccedil}	letter C with cedilla MW_FONT r0199
+{cedil}		floating cedilla (no letter) MW_FONT i0157
+{cent}		cents sign MW_FONT x0132
+{chacek}	letter c with hacek/caron over MW_FONT x0041
+{Chacek}	letter C with hacek/caron over MW_FONT x0040
+{check}		check mark MW_FONT x0248
+{chempt}	chemical point = {middot} MW_FONT x0121
+{circ}		floating circumflex (no letter under) MW_FONT i0147
+{cirtimes}	circle with times inside MW_FONT x0159
+{cmacr}		letter c with macron over MW_FONT x0242
+{Coline} 	letter C with overline MW_FONT x0254
+{coloncur}	colon currency symbol MW_FONT i0216
+{copy}		copyright sign MW_FONT i0109
+{cudot}		letter c with dot under MW_FONT x0213
+{Cudot}		letter C with dot under MW_FONT x0212
+{cup}		math cup MW_FONT x0156
+{curoot}	cube root sign MW_FONT i0135
+{curoot2}	cube root sign with overline MW_FONT i0135,MW_FONT i0136
+{currency}	currency symbol MW_FONT i0253
+
+{dagger}	dagger for death date MW_FONT x0134
+{Dagger}	double dagger  MW_FONT i0227
+{dbar}		letter d with horizontal bar MW_FONT x0216
+{Dbar}		letter D with horizontal bar MW_FONT x0124
+{dblbond}	chemical double bond symbol MW_FONT i0093
+{dblhyph}	double hyphen MW_FONT r0170
+{dcedil}	letter d with cedilla MW_FONT x0217
+{Dcedil}	letter D with cedilla MW_FONT x0214
+{deg}		degree symbol MW_FONT r0176
+{divide}	division sign MW_FONT r0247
+{dollar}	dollar sign MW_FONT r0036
+{dudot}		letter d with dot under MW_FONT x0186
+{Dudot}		letter D with dot under MW_FONT x0215
+
+{eacute}	letter e with acute accent MW_FONT r0233
+{Eacute}	letter E with acute accent MW_FONT r0201
+{earth}		Earth symbol MW_FONT i0233
+{ebreve}	letter e with breve over MW_FONT x0044
+{Ebreve}	letter E with breve over MW_FONT x0043
+{ecedil}	letter e with cedilla MW_FONT x0218
+{ecirc}		letter e with circumflex MW_FONT r0234
+{Ecirc}		letter E with circumflex MW_FONT r0202
+{ecircac}	letter e with circumflex over and acute over MW_FONT x0187
+{ecrcudot}	letter e with circumflex over and dot under MW_FONT x0188
+{edot}		letter e with single dot over MW_FONT x0045
+{egrave}	letter e with grave accent MW_FONT r0232
+{Egrave}	letter E with grave accent MW_FONT r0200
+{ehook}		letter e with hook under MW_FONT x0047
+{Ehook}		letter E with hook under MW_FONT x0046
+{ehacek}	letter e with hacek over MW_FONT x0049
+{Ehacek}	letter E with hacek over MW_FONT x0048
+{emacr}		letter e with macron over MW_FONT r0135
+{emacrac}	letter e with macron and acute MW_FONT x0219
+{Emacr}		letter E with macron over MW_FONT x0042
+{emsp}		em space MW_FONT x0140
+{ensp}		en space MW_FONT x0139
+{eng}		phonetic "tailed n" MW_FONT r0138
+{equals}	equals sign MW_FONT r0061
+{eth}		Old English "eth/edh" MW_FONT x0125
+{etilde}	letter e with tilde MW_FONT x0189
+{euml}		letter e with diaeresis/umlaut MW_FONT r0235
+{Euml}		letter E with diaeresis/umlaut MW_FONT r0203
+{euro}		Euro currency symbol MW_FONT i0215
+{excl}		exclamation point MW_FONT r0033
+
+{fermata}	musical fermata/pause MW_FONT i0226
+{flat}		musical flat sign MW_FONT i0223
+{Forte}		musical dbl forte (fflig) MW_FONT i0085
+{frac00/00}	fraction with numerator (00) separated by "/" from denominator (00)
+	ie: {frac1/2} = fraction 1/2
+		{frac1/12} = fraction 1/12
+		{frac16/100} = fraction 16/100
+		etc.
+	NOTE: all fractions superscript numerals and subscript numerals, 
+	including a fraction slash and a comma for the denominator, when needed,
+	are found in MW_FONT i0096 through i0123; for example:
+	{frac1/2} = MW_FONT i0097 + i0122 + i0114
+{fuml}		letter f with umlaut over MW_FONT x0220
+
+{gbar}		letter g with horizontal bar MW_FONT x0109
+{gbreve}	letter g with breve over MW_FONT x0052
+{Gbreve}	letter G with breve over MW_FONT x0051
+{Gcirc}		letter G with circumflex MW_FONT x0050
+{gdot}		letter g with dot over MW_FONT x0053
+{ge}		greater than or equal to MW_FONT x0153
+{gemini}	Gemini symbol MW_FONT i0242
+{ggrave}	letter g with grave accent MW_FONT x0221
+{ghacek}	letter g with hacek MW_FONT x0111
+{Ghacek}	letter G with hacek MW_FONT x0110
+{glotstop}	glottal stop MW_FONT i0071
+{grave}		floating grave accent (no letter under) MW_FONT i0145
+{gt}		greater than sign MW_FONT r0062
+{guarani}	Guarani currency symbol MW_FONT i0218
+
+{hacek}		floating hacek (no letter) MW_FONT i0155
+{hairsp}	hair space MW_FONT x0137
+{hamzah}	hamzah MW_FONT i0074
+{hcedil}	letter h with cedilla MW_FONT x0224
+{Hcedil}	letter h with cedilla MW_FONT x0177
+{hellip}	horizontal 3-dot ellipse = {period} + {nbsp} + {period} + {nbsp} + {period} - ({nbsp} = no-break space)
+{h,1} {h,2}, etc.	superscript homograph numbers MW_FONT r0161+
+{h,1}		{supone} MW_FONT r0161
+{h,2}		{suptwo} MW_FONT r0162
+{h,3}		{supthree} MW_FONT r0167
+{h,4}		{supfour} MW_FONT r0168
+{h,5}		{supfive} MW_FONT r0169
+{h,6}		{supsix} MW_FONT r0174
+{h,7}		{supseven} MW_FONT r0175
+{h,8}		{supeight} MW_FONT r0180
+{h,9}		{supnine} MW_FONT r0181
+{h,0}		{supzero} MW_FONT r0182
+{hhook}		letter h with hook under MW_FONT r0240
+{hstres}	primary (high) stress mark MW_FONT r0130
+{hubreve}	letter h with breve under MW_FONT x0190
+{huhacek}	letter h with hacek under MW_FONT x0225
+{hudot}		letter h with dot under MW_FONT x0054
+{Hudot}		letter H with dot under MW_FONT x0178
+{huline} 	letter h with line under MW_FONT x0226
+{Huline} 	letter H with line under MW_FONT x0223
+{Huring} 	letter H with ring under MW_FONT x0222
+
+{i}			(square root of minus one) = MW_FONT i0134, i0136, backspace and {minus}1
+{iacute}	letter i with acute accent MW_FONT r0237
+{Iacute}	letter I with acute accent MW_FONT r0205
+{ibreve}	letter i with breve over MW_FONT x0056
+{ibar}		letter i with horizonal bar MW_FONT x0243
+{icirc}		letter i with circumflex MW_FONT r0238
+{Icirc}		letter I with circumflex MW_FONT r0206
+{Idot}		letter I with dot over MW_FONT x0057
+{iexcl}		inverted (Spanish) exclamation point MW_FONT x0131
+{igrave}	letter i with grave accent MW_FONT r0236
+{Igrave}	letter I with grave accent MW_FONT r0204
+{ihacek}	letter i with hacek MW_FONT x0104
+{imacr}		letter i with macron over MW_FONT r0136
+{Imacr}		letter I with macron over MW_FONT x0055
+{imactil}  	letter i with macron and tilde MW_FONT x0229
+{inodot}	letter i without the dot MW_FONT x0058
+{index}		fistnote symbol MW_FONT x0250
+{infin}		infinity symbol MW_FONT i0107
+{int}		integral operator MW_FONT i0108
+{iquest}	inverted (Spanish) question mark MW_FONT x0136
+{iuml}		letter i with diaeresis/umlaut MW_FONT r0239
+{iumlac} 	letter i with umlaut and acute MW_FONT x0228
+{Iuml}		letter I with diaeresis/umlaut MW_FONT r0207
+
+#	****************************************
+{ipa006}	i0033-ipa006	[turned a IPA]	"turneda"
+{ipa007}	i0034-ipa007	[script a IPA]	"scripta"
+{ipa009}	i0035-ipa009	[turned script a IPA]	"turnedscripta" - also "invscripta"
+{ipa018}	i0036-ipa018	[inverted v IPA]	"invv"
+{ipa025}	i0037-ipa025	[beta IPA]	"beta"
+{ipa039}	i0038-ipa039	[d-yogh ligature IPA]	"dyogh"
+{ipa044i}	i0039-ipa044i	[italic schwa IPA]	"ischwa" ?
+{ipa050}	i0041-ipa050	[epsilon IPA]	"epsilon"
+{ipa054}	i0042-ipa054	[right hook reversed epsilon IPA]	""
+{ipa058}	i0043-ipa058	[script g; lc g IPA]	"scriptg"
+{ipa062}	i0044-ipa062	[gamma IPA]	"gamma"
+{ipa064b}	i0045-ipa064b	[superscript h IPA]	"suph"
+{ipa066}	i0078-ipa066	[barred h IPA]	"hbar"
+{ipa071}	i0046-ipa071	[turned h IPA]	"turnedh"
+{ipa075}	i0047-ipa075	[barred i IPA]	"ibar"
+{ipa076}	i0048-ipa076	[iota IPA]	"iota"
+{ipa077a}	i0049-ipa077a	[small cap I IPA]	"sci" or "isc"
+{ipa078a}	i0050-ipa078a	[barred small cap I IPA]	"scibar"
+{ipa080}	i0051-ipa080	[superscript j IPA]	"supj"
+{ipa086}	i0086-ipa086	[right-hook schwa IPA]	"schwahk"
+{ipa087as}	i0054-ipa087as	[l w/ syllabicity mark IPA]	"lsylab"
+{ipa087b}	i0052-ipa087b	[l with tilde IPA]	"ltilde"
+{ipa089}	i0053-ipa089	[belted l IPA]	"lbelted"
+{ipa095s}	i0055-ipa095s	[m w/ syllabicity mark IPA]	"msyllab"
+{ipa097}	i0058-ipa097	[turned m IPA]	"turnedm"
+{ipa100as}	i0056-ipa100as	[n w/ syllabicity mark IPA]	"nsyllab"
+{ipa103}	i0059-ipa103	[left hook n IPA]	"nlefthook"
+{ipa104as}	i0057-ipa104as	[eng w/ syllabicity mark IPA]	"engsyllab"
+{ipa132}	i0061-ipa132	[fishhook r IPA]	"fishhookr"
+{ipa135}	i0062-ipa135	[turned r IPA]	"turnedr"
+{ipa138a}	i0063-ipa138a	[small cap R IPA]	"scr"
+{ipa143a}	i0064-ipa143a	[esh IPA]	"esh"
+{ipa149}	i0065-ipa149	[t-esh ligature IPA]	"tesh"
+{ipa151}	i0066-ipa151	[theta IPA]	"theta"
+{ipa156a}	i0067-ipa156a	[upsilon IPA]	"upsilon"
+{ipa164}	.....-ipa164	[inverted w]
+{ipa167}	i0068-ipa167	[chi IPA]	"chi"
+{ipa172}	i0069-ipa172	[small cap Y IPA]	"scy"
+{ipa185}	i0071-ipa185	[glottal stop IPA]	"glotstop"
+{ipa189}	i0072-ipa189	[reversed glottal stop IPA]	"revglotstop"
+{ipa215b}	i0073-ipa215b	[triangular colon IPA]	"length"
+#	****************************************
+
+{jhacek}	letter j with hacek over MW_FONT x0114
+{jupiter}	Jupiter symbol MW_FONT i0235
+
+{kapos}		letter k with apostrophe over MW_FONT x0191
+{kudot}		letter k with dot under MW_FONT x0227
+{kuline}	letter k with underline MW_FONT r0137
+
+{lang}		left angle bracket MW_FONT r0178
+{laquo}		left angled quotes MW_FONT x0147
+{laquos}	left angled quote single MW_FONT x0149
+{lcub}		left curly brace MW_FONT r0123
+{ldquo}		left double quote marks MW_FONT r0187
+{le}		less than or equal sign MW_FONT x0152
+{leo}		Leo symbol MW_FONT i0244
+{libra}		Libra symbol MW_FONT i0246
+{lrarr}		left-right arrow (double pointing arrow) (&U2194;)
+{lsqb}		left square bracket MW_FONT r0091
+{lsquo}		left single quote mark MW_FONT r0185
+{lstrok}	letter l with diagonal stroke (Polish el) MW_FONT x0060
+{Lstrok}	letter L with diagonal stroke (Polish El) MW_FONT x0059
+{lstres}	secondary (low) stress mark MW_FONT r0131
+{lt}		less than sign MW_FONT r0060
+{ludot}		letter l with dot under MW_FONT x0192
+{Ludot}		letter L with dot under MW_FONT x0230
+{luline}   	letter l with underline MW_FONT x0231
+
+{macr}		floating (no letter) macron MW_FONT i0149
+{malt}		maltese cross MW_FONT i0255
+{mars}		Mars symbol MW_FONT i0234
+{mdash}		em dash MW_FONT r0151
+{mdot}		letter m with dot over MW_FONT x0193
+{mercury}	Mercury symbol MW_FONT i0231
+{middot}	middle dot/chemical point MW_FONT x0121
+{minus}		minus sign MW_FONT r0155
+{Moline}	letter M with overline MW_FONT x0255
+{mudot}		letter m with dot under MW_FONT x0232
+{muline}	letter m with underline MW_FONT x0179
+
+{nacute}	letter n with acute accent MW_FONT x0062
+{Nacute}	letter N with acute accent MW_FONT x0061
+{naira}		Naira currency symbol MW_FONT i0217
+{natur}		musical natural sign MW_FONT i0225
+{nbsp}		no-break space MW_FONT r0160
+{ndash}		en dash MW_FONT r0150
+{ndot}		letter n with dot over MW_FONT x0195
+{Ndot}		letter N with dot over MW_FONT x0233
+{ne}		math not equals sign MW_FONT x0154
+{neptune}	Neptune symbol MW_FONT i0238
+{nhacek}	letter n with hacek over MW_FONT x0064
+{Nhacek}	letter N with hacek over MW_FONT x0063
+{notsign}	logical not MW_FONT r0172
+{ntilde}	letter n with tilde MW_FONT r0241
+{Ntilde}	letter N with tilde MW_FONT r0209
+{nudot}		letter n with dot under MW_FONT x0194
+{Nudot}		letter N with dot under MW_FONT x0234
+{nuline}	letter n with underline MW_FONT x0181
+{num}		number sign (hash mark) MW_FONT r0035
+{numl}		letter n with umlaut MW_FONT x0196
+{Numl}		letter N with umlaut MW_FONT x0235
+{numsp}		number space MW_FONT x0139
+
+{oacute}	letter o with acute accent MW_FONT r0243
+{Oacute}	letter O with acute accent MW_FONT r0211
+{obreve}	letter o with breve over MW_FONT x0067
+{Obreve}	letter O with breve over MW_FONT x0066
+{ocirc}		letter o with circumflex MW_FONT r0244
+{Ocirc}		letter O with circumflex MW_FONT r0212
+{ocircgrv}	letter o with circumflex and grave over MW_FONT x0198
+{ocrcudot}	letter o with circumflex over and dot under MW_FONT x0167
+{odblac}	letter o with double acute accent MW_FONT x0069
+{Odblac}	letter O with double acute accent MW_FONT x0068
+{odot}		letter o with single dot over MW_FONT r0149
+{oelig}		letters o and e ligatured MW_FONT r0164
+{oeligm}	oe ligature with macron over both MW_FONT r0165
+{OElig}		letters O and E ligatured MW_FONT x0070
+{ograve}	letter o with grave accent MW_FONT r0242
+{Ograve}	letter O with grave accent MW_FONT r0210
+{ohacek}	letter o with hacek MW_FONT x0105
+{ohook}		letter o with hook/ogonek under MW_FONT x0113
+{Ohook}		letter O with hook/ogonek under MW_FONT x0112
+{ohookac}	letter o with hook/ogonek under and acute over MW_FONT x0197
+{omacr}		letter o with macron over MW_FONT r0139
+{omacrac}	letter o with macron and acute MW_FONT x0239
+{Omacr}		letter O with macron over MW_FONT x0065
+{openo}		IPA open o (rev'd c) MW_FONT i0060
+{openoac}	IPA open o with acute accent MW_FONT i0083
+{oslash}	letter o with diagonal slash MW_FONT r0248
+{Oslash}	letter O with diagonal slash MW_FONT r0216
+{otilde}	letter o with tilde over MW_FONT r0245
+{Otilde}	letter O with tilde over MW_FONT r0213
+{ouml}		letter o with diaeresis/umlaut MW_FONT r0246
+{Ouml}		letter O with diaeresis/umlaut MW_FONT r0214
+{ounce}		ounce symbol MW_FONT i0229
+{ovrline}	long overline MW_FONT i0159
+
+{papos}		letter p with apostrophe over MW_FONT x0199
+{par}		parallel lines (vertical) MW_FONT i0228
+{para}		paragraph symbol MW_FONT x0135
+{peace}		peace symbol MW_FONT x0246
+{percnt}	percent sign MW_FONT r0037
+{permil}	permil sign MW_FONT x0151
+{period}	literal period	MW_FONT r0046
+{phone}		telephone symbol MW_FONT x0251
+{pisces}	Pisces sign MW_FONT i0251
+{plus}		plus sign MW_FONT r0043
+{plusmn}	"plus or minus" sign MW_FONT r0177
+{pluto}		Pluto symbol MW_FONT i0239
+{point}		centered dot/hyphenation point MW_FONT r0163
+{pound}		pound currency symbol  MW_FONT i0214
+{prime}		math prime MW_FONT r0189
+{Prime}		math double prime MW_FONT r0190
+
+{qapos}		letter q with apostrophe over MW_FONT x0200
+{qbang}		interrobang MW_FONT i0222
+
+{Racute}	letter R with acute accent MW_FONT x0071
+{rarr}		right arrow MW_FONT x0249 (&U2192;)
+{raquo}		right angled quotes MW_FONT x0148
+{raquos}	right angled quote single MW_FONT x0150
+{rang}		right angle bracket MW_FONT r0179
+{rcub}		right curly brace MW_FONT r0125
+{rdquo}		right double quote mark MW_FONT r0188
+{reg}		registered sign MW_FONT i0110
+{rhacek}	letter r with hacek/caron over MW_FONT x0073
+{Rhacek}	letter R with hacek/caron over MW_FONT x0072
+{rough}		rough breathing mark MW_FONT x0119
+{rsqb}		right square bracket MW_FONT r0093
+{rsquo}		right single quote mark MW_FONT r0186
+{rudot}		letter r with dot under MW_FONT x0201
+{Rudot}		letter R with dot under MW_FONT x0241
+{ruline}	letter r with underline MW_FONT x0202
+{Ruline}	letter R with underline MW_FONT x0240
+{ruml}		letter r with umlaut over MW_FONT x0203
+{ruuml}		letter r with umlaut under MW_FONT x0146
+{rudia}		letter r with diaeresis under MW_FONT x0146
+{rx}		Rx pharmacy symbol MW_FONT x0247
+
+{sacute}	letter s with acute accent MW_FONT x0075
+{Sacute}	letter S with acute accent MW_FONT x0074
+{saturn}	Saturn symbol MW_FONT i0236
+{sagitt}	Sagittarius symbol MW_FONT i0248
+{sbreve}	letter s with breve MW_FONT x0116
+{Sbreve}	letter S with breve MW_FONT x0236
+{scedil}	letter s with cedilla under MW_FONT x0077
+{Scedil}	letter S with cedilla under MW_FONT x0076
+{schwa}		phonetic schwa MW_FONT r0132
+{schwaac}	phonetic schwa with acute accent (italic) MW_FONT i0084
+{schwaac}	phonetic schwa with acute accent (italic) MW_FONT r0133
+{schwadot}	phonetic schwa with dot over MW_FONT r0133
+{schwagrv}	phonetic schwa with grave accent (italic) MW_FONT r0130
+{schwagv}	phonetic schwa with grave accent (italic) MW_FONT i0082
+{schwahk}	phonetic schwa with hook under MW_FONT i0040
+{scorpius}	Scorpio/Scorpius symbol MW_FONT i0247
+{scruple}	scruple symbol MW_FONT i0230
+{sdash}		swung dash MW_FONT r0166
+{sect}		section mark MW_FONT x0133
+{sglbond}	chemical single bond MW_FONT i0092
+{shacek}	letter s with hacek/caron over MW_FONT x0079
+{Shacek}	letter S with hacek/caron over MW_FONT x0078
+{Shook}		letter S with hook under MW_FONT x0238
+{sharp}		musical sharp sign MW_FONT i0224
+{shdot}		shoulder dot MW_FONT x0121
+{smacr}		letter s with macron MW_FONT x0117
+{sol}		solidus/slash MW_FONT r0047
+{sroot}		square root sign MW_FONT i0134
+{sroot2}	square root sign with overline MW_FONT i0134,MW_FONT i0136
+{dlbstres}	stacked stress marks MW_FONT r0145
+{sudot}		letter s with dot under MW_FONT x0118
+{Sudot}		letter S with dot under MW_FONT x0237
+{supschwa}	superscript schwa MW_FONT r0171
+{supn}		superscript n MW_FONT r0159
+{supy}		superscript y MW_FONT r0173
+{supone} 	superscript one MW_FONT r0161
+{suptwo} 	superscript two MW_FONT r0162
+{supthree} 	superscript three MW_FONT r0167
+{supfour} 	superscript four MW_FONT r0168
+{supfive} 	superscript five MW_FONT r0169
+{supsix} 	superscript six MW_FONT r0174
+{supseven} 	superscript seven MW_FONT r0175
+{supeight} 	superscript eight MW_FONT r0180
+{supnine} 	superscript nine MW_FONT r0181
+{supzero} 	superscript zero MW_FONT r0182
+{szlig}		German esszed MW_FONT r0223
+
+{taurus}	Taurus symbol MW_FONT i0241
+{tcedil}	letter t with cedilla MW_FONT x0081
+{Tcedil}	letter T with cedilla MW_FONT x0080
+{tdot}		letter t with dot over MW_FONT x0176
+{tearast}	teardrop asterisk MW_FONT i0254
+{thsp}		thin space MW_FONT x0138
+{thinsp}	thin space MW_FONT x0138
+{thorn}		Old English "thorn" MW_FONT i0089
+{THORN}		Old English "Thorn" MW_FONT i0088
+{thuline}	roman "th" with underline MW_FONT r0140
+{tilde}		floating tilde (no letter) MW_FONT i0148
+{times}		times sign MW_FONT r0215
+{trade}		trademark sign MW_FONT x0120
+{tribond}	chemical triple bond symbol MW_FONT i0094
+{tudot}		letter t with dot under MW_FONT x0204
+{Tudot}		letter T with dot under MW_FONT x0180
+{tuline}	letter t with underline MW_FONT x0205
+{tuhacek}	letter t with hacek under MW_FONT x0161
+
+{uacute}	letter u with acute accent MW_FONT r0250
+{Uacute}	letter U with acute accent MW_FONT r0218
+{ubreve}	letter u with breve over MW_FONT x0086
+{Ubreve}	letter U with breve over MW_FONT x0085
+{ucirc}		letter u with circumflex MW_FONT r0251
+{Ucirc}		letter U with circumflex MW_FONT r0219
+{udblac}	letter u with double acute MW_FONT x0089
+{udot}		letter u with single dot over MW_FONT r0152
+{Udot}		letter U with single dot over MW_FONT x0164
+{uelig}		letters u and e ligatured MW_FONT r0153
+{ueligm}	ue ligature with macron over both MW_FONT r0154
+{ugrave}	letter u with grave accent MW_FONT r0249
+{Ugrave}	letter U with grave accent MW_FONT r0217
+{uhacek}	letter u with hacek MW_FONT x0106
+{uhook}		letter u with hook under MW_FONT x0090
+{uline}		underscore (keyboard) MW_FONT r0095
+{umacr}		letter u with macron over MW_FONT x0084
+{Umacr}		letter U with macron over MW_FONT x0083
+{umactil}	letter u with macron and tilde over MW_FONT x0166
+{uml}		floating umlaut (no letter) MW_FONT i0152
+{uranus}	Uranus symbol MW_FONT i0237
+{uring}		letter u with ring over MW_FONT x0088
+{Uring}		letter U with ring over MW_FONT x0087
+{utilde}	letter u with tilde over MW_FONT x0082
+{uuml}		letter u with diaeresis/umlaut MW_FONT r0252
+{uumlgrv} 	letter u with umlaut and grave MW_FONT x0107
+{Uuml}		letter U with diaeresis/umlaut MW_FONT r0220
+
+{venus}		Venus symbol MW_FONT i0232
+{verbar}	vertical bar (solid) MW_FONT r0124
+{virgo}		Virgo symbol MW_FONT i0245
+{Voline}	letter V with overline MW_FONT x0252
+
+{wcirc}		letter w with circumflex MW_FONT x0091
+{won}		Won currency symbol MW_FONT i0221
+
+{Xoline}	letter X with overline MW_FONT x0253
+
+{yacute}	letter y with acute accent MW_FONT r0253
+{Yacute}	letter Y with acute accent MW_FONT r0221
+{yapos}		letter y with apostrophe over MW_FONT x0206
+{ycirc}		letter y with circumflex MW_FONT x0093
+{Ycirc}		letter Y with circumflex MW_FONT x0092
+{yen}		Yen currency symbol MW_FONT i0219
+{yogh}		Old English "yogh" MW_FONT i0070
+{ymacr}		letter y with macron MW_FONT x0162
+{Ymacr}		letter Y with macron MW_FONT x0163
+{yuml}		letter y with umlaut over MW_FONT r0255
+{Yuml}		letter Y with umlaut over MW_FONT x0094
+
+{zacute}	letter z with acute accent MW_FONT x0096
+{Zacute}	letter Z with acute accent MW_FONT x0095
+{Zbar}		letter Z with horizontal bar through MW_FONT x0102
+{zbreve}	letter z with breve MW_FONT x0173
+{Zbreve}	letter Z with breve MW_FONT x0172
+{zcedil}	letter z with cedilla MW_FONT x0174
+{Zcedil}	letter Z with cedilla MW_FONT x0171
+{zdot}		letter z with dot over MW_FONT x0098
+{Zdot}		letter Z with dot over MW_FONT x0097
+{zeronull}	zero with diagonal slash MW_FONT x0130
+{zhacek}	letter z with hacek over MW_FONT x0100
+{Zhacek}	letter Z with hacek over MW_FONT x0099
+{zudot}		letter z with dot under MW_FONT x0207
+{Zudot}		letter Z with dot under MW_FONT x0169
+{zumacr} 	letter z with macron under MW_FONT x0175
+{Zumacr} 	letter Z with macron under MW_FONT x0170
+{zuuml}		letter z with umlaut under MW_FONT x0168
+{zudia}		letter z with diaeresis under MW_FONT x0168
+
+*******************************************************
+
+Greek: based on SGML ISOgrk1 {agr} = &agr; etc.
+
+{agr}		Greek alpha MW_FONT i0185
+{Agr}		Greek Alpha MW_FONT i0161
+{bgr}		Greek beta MW_FONT i0186
+{Bgr}		Greek Beta MW_FONT i0162
+{ggr}		Greek gamma MW_FONT i0187
+{Ggr}		Greek Gamma MW_FONT i0163
+{dgr}		Greek delta MW_FONT i0188
+{Dgr}		Greek Delta MW_FONT i0164
+{egr}		Greek epsilon MW_FONT i0189
+{Egr}		Greek Epsilon MW_FONT i0165
+{zgr}		Greek zeta MW_FONT i0190
+{Zgr}		Greek Zeta MW_FONT i0166
+{eegr}		Greek eta MW_FONT i0191
+{EEgr}		Greek Eta MW_FONT i0167
+{thgr}		Greek theta MW_FONT i0192
+{THgr}		Greek Theta MW_FONT i0168
+{igr}		Greek iota MW_FONT i0193
+{Igr}		Greek Iota MW_FONT i0169
+{kgr}		Greek kappa MW_FONT i0194
+{Kgr}		Greek Kappa MW_FONT i0170
+{lgr}		Greek lambda MW_FONT i0195
+{Lgr}		Greek Lambda MW_FONT i0171
+{mgr}		Greek mu MW_FONT i0087
+{Mgr}		Greek Mu MW_FONT i0172
+{ngr}		Greek nu MW_FONT i0196
+{Ngr}		Greek Nu MW_FONT i0173
+{xgr}		Greek xi MW_FONT i0197
+{Xgr}		Greek Xi MW_FONT i0174
+{ogr}		Greek omicron MW_FONT i0198
+{Ogr}		Greek Omicron MW_FONT i0175
+{pgr}		Greek pi MW_FONT i0199
+{Pgr}		Greek Pi MW_FONT i0176
+{rgr}		Greek rho MW_FONT i0200
+{Rgr}		Greek Rho MW_FONT i0177
+{sgr}		Greek sigma MW_FONT i0202
+{Sgr}		Greek Sigma MW_FONT i0178
+{sfgr}		Greek sigma (final) MW_FONT i0201
+{tgr}		Greek tau MW_FONT i0203
+{Tgr}		Greek Tau MW_FONT i0179
+{ugr}		Greek upsilon MW_FONT i0204
+{Ugr}		Greek Upsilon MW_FONT i0180
+{phgr}		Greek phi MW_FONT i0205
+{PHgr}		Greek Phi MW_FONT i0181
+{khgr}		Greek chi MW_FONT i0206
+{KHgr}		Greek Chi MW_FONT i0182
+{psgr}		Greek psi MW_FONT i0207
+{PSgr}		Greek Psi MW_FONT i0183
+{ohgr}		Greek omega MW_FONT i0208
+{OHgr}		Greek Omega MW_FONT i0184
+
+{agrvgr}	Greek alpha with grave accent MW_FONT i0209
+{eacgr}		Greek epsilon with acute accent MW_FONT i0210
+{eaposgr}	Greek epsilon with apostrophe over MW_FONT i0211
+{icircgr}	Greek iota with circumflex over MW_FONT i0212
+{lbargr}	Greek lambda with horizontal bar MW_FONT i0213
+

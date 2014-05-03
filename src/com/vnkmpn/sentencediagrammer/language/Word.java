@@ -14,15 +14,17 @@ import com.vnkmpn.sentencediagrammer.R;
 
 public class Word {
 	private String text = "";
-	private ArrayList<String> types = new ArrayList<String>();
+	private ArrayList<String> types;
+	private ArrayList<String> definitions;
 
 	private String key = "INVALID_KEY";
 	private Context ctx = null;
+	private MWDictionary dictionaryEntry;
 
 	public Word(Context context,String word) {
 		this.ctx = context;
 		this.text = word;
-		
+
 		try {
 			InputStream inputStream = context.getAssets().open("dictionary.properties");
 			Properties properties = new Properties();
@@ -31,14 +33,11 @@ public class Word {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		this.types = lookUpWord(word);
-	}
+		this.dictionaryEntry = (MWDictionary) new MWDictionary(key).execute(word);
 
-	private ArrayList<String> lookUpWord(String word) {
-		MWDictionary dict = (MWDictionary) new MWDictionary(key).execute(word);
-		ArrayList<String> types = null;
+		Integer status = -2;
 		try {
-			types = dict.get();
+			status = dictionaryEntry.get();
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -46,7 +45,11 @@ public class Word {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return types;
+		if (status == 0) 
+		{
+			this.types = dictionaryEntry.getSpeechTypes();
+			this.definitions = dictionaryEntry.getDefinitions();
+		}
 	}
 
 	public String getPlaintext() {
@@ -56,10 +59,24 @@ public class Word {
 
 	@SuppressLint("DefaultLocale")
 	public String getType() {
-		if (types.size() > 0 ) {
-			return types.get(0).toLowerCase();
+		if (types != null) // make sure we got something
+		{
+			if (types.size() > 0) //make sure a type exists in the something
+			{
+				return types.get(0).toLowerCase();
+			}
 		}
 		return null;
+	}
+
+	public ArrayList<String> getAllTypes() {
+		ArrayList<String> types = null;
+		types = dictionaryEntry.getSpeechTypes();
+		return types;
+	}
+
+	public ArrayList<String> getDefinition() {
+		return definitions;
 	}
 
 	public String getHtml() {
@@ -72,19 +89,19 @@ public class Word {
 			if (type.equals("noun")) {
 				color = ctx.getResources().getText(R.string.noun);
 			} else if (type.equals("verb")) {
-				color = ctx.getResources().getText(R.string.verb);;
+				color = ctx.getResources().getText(R.string.verb);
 			} else if (type.equals("adjective")) {
-				color = ctx.getResources().getText(R.string.adjective);;
+				color = ctx.getResources().getText(R.string.adjective);
 			} else if (type.contains("article")) {
-				color = ctx.getResources().getText(R.string.article);;
+				color = ctx.getResources().getText(R.string.article);
 			} else if (type.equals("adverb")) {
-				color = ctx.getResources().getText(R.string.adverb);;
+				color = ctx.getResources().getText(R.string.adverb);
 			} else if (type.equals("pronoun")) {
-				color = ctx.getResources().getText(R.string.pronoun);;
+				color = ctx.getResources().getText(R.string.pronoun);
 			} else if (type.equals("conjunction")) {
-				color = ctx.getResources().getText(R.string.conjunction);;
+				color = ctx.getResources().getText(R.string.conjunction);
 			} else if (type.equals("preposition")) {
-				color = ctx.getResources().getText(R.string.preposition);;
+				color = ctx.getResources().getText(R.string.preposition);
 			} else {
 				Log.d("Main",  this.getPlaintext() + " is a " + type);
 			}

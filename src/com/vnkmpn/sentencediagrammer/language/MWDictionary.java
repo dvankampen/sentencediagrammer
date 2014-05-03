@@ -21,27 +21,30 @@ import org.xml.sax.SAXParseException;
 import android.os.AsyncTask;
 import android.util.Log;
 
-public class MWDictionary extends AsyncTask<String, Void, ArrayList<String>> {
+public class MWDictionary extends AsyncTask<String, Void, Integer> {
 	
 	String key = "INVALID_KEY";
+	ArrayList<String> speechTypes;
+	ArrayList<String> definitions;
 	
 	public MWDictionary(String key) {
 		this.key = key;
 	}
 
-	protected ArrayList<String> doInBackground(String... args) {
+	protected Integer doInBackground(String... args) {
 		String leadingURL = "http://www.dictionaryapi.com/api/v1/references/collegiate/xml/";
 		String keyTag = "?key=";
 		String word = args[0];
 		if (key.equals("INVALID_KEY"))
 		{
 			Log.d("MWDict", "invalid key used, returning");
-			return null;
+			return -1;
 		}
 
 		HttpGet uri = new HttpGet(leadingURL + word + keyTag + key);
 
-		ArrayList<String> speechTypes = new ArrayList<String>();
+		speechTypes = new ArrayList<String>();
+		definitions = new ArrayList<String>();
 
 		DefaultHttpClient client = new DefaultHttpClient();
 		HttpResponse resp = null;
@@ -52,7 +55,7 @@ public class MWDictionary extends AsyncTask<String, Void, ArrayList<String>> {
 			e.printStackTrace();
 		} catch (IOException e) {
 			Log.d("MWDict", "could not connect to dictionary site...");
-			return null;
+			return -1;
 		}
 
 		StatusLine status = resp.getStatusLine();
@@ -75,7 +78,7 @@ public class MWDictionary extends AsyncTask<String, Void, ArrayList<String>> {
 			doc = builder.parse(resp.getEntity().getContent());
 		} catch (SAXParseException spe) {
 			Log.d("MWDict", "SAX Parse error - perhaps an invalid MW Dictionary API Key?");
-			return null;
+			return -1;
 		}catch (SAXException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -84,15 +87,14 @@ public class MWDictionary extends AsyncTask<String, Void, ArrayList<String>> {
 
 		}
 
-		NodeList elements = doc.getElementsByTagName("fl");
-		if (elements.getLength() > 0) {
+		NodeList functionalLabelElements = doc.getElementsByTagName("fl");
+		if (functionalLabelElements.getLength() > 0) {
 
-
-			for (int i = 0; i < elements.getLength(); i++) {
-				Node element = elements.item(i);
+			for (int i = 0; i < functionalLabelElements.getLength(); i++) {
+				Node element = functionalLabelElements.item(i);
 				if (element.hasChildNodes())
 				{
-					Node child = elements.item(i).getChildNodes().item(0);
+					Node child = functionalLabelElements.item(i).getChildNodes().item(0);
 					String text = child.getNodeValue();
 					speechTypes.add(text);
 				}
@@ -100,7 +102,22 @@ public class MWDictionary extends AsyncTask<String, Void, ArrayList<String>> {
 		} else {
 			Log.d("MWDict", "No speech types found for " + word);
 		}
-		return speechTypes;
+		
+		NodeList definingTextElements = doc.getElementsByTagName("dt");
+		if (definingTextElements.getLength() > 0) {
+			for (int i = 0; i < definingTextElements.getLength(); i++) {
+				Node element = definingTextElements.item(i);
+				if (element.hasChildNodes())
+				{
+					Node child = definingTextElements.item(i).getChildNodes().item(0);
+					String text = child.getNodeValue();
+					definitions.add(text);
+				}
+			}
+		} else {
+			Log.d("MWDict", "No definitions found for " + word);
+		}
+		return 0;
 	}
 
 	static String convertStreamToString(java.io.InputStream is) {
@@ -111,5 +128,13 @@ public class MWDictionary extends AsyncTask<String, Void, ArrayList<String>> {
 	protected void onPostExecute(String feed) {
 		// TODO: check this.exception 
 		// TODO: do something with the feed
+	}
+
+	public ArrayList<String> getSpeechTypes() {
+		return speechTypes;
+	}
+
+	public ArrayList<String> getDefinitions() {
+		return definitions;
 	}
 }

@@ -44,4 +44,12 @@ public class Sentence {
 		Word word = new Word(ctx, text);
 		this.words.addLast(word);
 	}
+	
+	public Word getSubject() {
+		return null;
+	}
+	
+	public Word getObject() {
+		return null;
+	}
 }
