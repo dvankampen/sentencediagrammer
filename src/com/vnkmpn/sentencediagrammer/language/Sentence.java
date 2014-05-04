@@ -35,14 +35,23 @@ public class Sentence {
 	public String removeWordAsPlaintext() {
 		return words.removeFirst().getPlaintext();
 	}
+	
+	public void removeWord() {
+		words.removeLast();
+	}
+	
+	public void removeWord(int id) {
+		words.remove(id);
+	}
 
-	public int getRemainingWordCount() {
+	public int getWordCount() {
 		return words.size();
 	}
 
-	public void addWord(String text) {
+	public int addWord(String text) {
 		Word word = new Word(ctx, text);
 		this.words.addLast(word);
+		return words.size();
 	}
 	
 	public Word getSubject() {
@@ -51,5 +60,9 @@ public class Sentence {
 	
 	public Word getObject() {
 		return null;
+	}
+
+	public String getWordHtml(int id) {
+		return words.get(id-1).getHtml();
 	}
 }

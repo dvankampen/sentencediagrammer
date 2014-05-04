@@ -102,7 +102,10 @@ public class Word {
 				color = ctx.getResources().getText(R.string.conjunction);
 			} else if (type.equals("preposition")) {
 				color = ctx.getResources().getText(R.string.preposition);
-			} else {
+			} else if (type.equals("abbreviation")) {
+				color = ctx.getResources().getText(R.string.abbreviation);
+			}else {
+
 				Log.d("Main",  this.getPlaintext() + " is a " + type);
 			}
 			return startFontTag + color + closeFont + this.getPlaintext() + endFontTag;

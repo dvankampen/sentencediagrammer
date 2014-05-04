@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="tests">
+        <item>Egads the evil teacher assigns us work daily and expects it on his desk by eight the next morning</item>
+        <item>The quick brown fix jumped over the lazy dog</item>
+    </string-array>
+    
+</resources>

@@ -1,6 +1,7 @@
 package com.vnkmpn.sentencediagrammer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 
 import com.vnkmpn.sentencediagrammer.language.Sentence;
@@ -17,7 +18,6 @@ import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
 import android.preference.PreferenceManager;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
@@ -40,61 +40,11 @@ import android.widget.Toast;
 @SuppressLint("DefaultLocale")
 public class MainActivity extends Activity implements OnClickListener {
 
-	private boolean liveDiagramming = true;
-
 	private TextView sentenceView;
-
-	private SpeechRecognizer sr;
 
 	private Sentence sentence;
 
 	private ImageButton button;
-	
-	SharedPreferences sharedPrefs;
-
-	@SuppressLint("HandlerLeak")
-	private final Handler updateSentenceViewHandler = new Handler() {
-
-		@Override
-		public void handleMessage(Message msg) {
-			appendHypertextToSentence(msg.obj.toString());
-			updateSentenceViewHandler.postDelayed(updateSentenceView,125);
-		}
-	};
-
-	private final Runnable updateSentenceView = new Runnable() {
-
-		@SuppressLint("DefaultLocale")
-		@Override
-		public void run() {
-
-			if (sentence.getRemainingWordCount() == 0 ) {
-				updateSentenceViewHandler.removeCallbacks(this);
-				return;
-			}
-
-			Message msg = updateSentenceViewHandler.obtainMessage();
-			msg.obj = sentence.removeWordAsHtml();
-
-			updateSentenceViewHandler.sendMessage(msg);
-		}
-	};
-
-	private Intent createRecognizerIntent() {
-		Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-		intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getApplicationContext().getPackageName());
-		intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-		intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
-
-		intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
-
-		return intent;
-	}
-
-	protected void appendHypertextToSentence(String word) {
-		sentenceView.append(Html.fromHtml(word));
-		sentenceView.invalidate();
-	}
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -102,8 +52,6 @@ public class MainActivity extends Activity implements OnClickListener {
 		setContentView(R.layout.main);
 		button = (ImageButton) findViewById(R.id.listenButton);
 
-		sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-		
 		Typeface type = Typeface.createFromAsset(getAssets(),"fonts/RobotoCondensed-Regular.ttf"); 
 
 		sentenceView = (TextView)findViewById(R.id.sentenceText);
@@ -114,11 +62,11 @@ public class MainActivity extends Activity implements OnClickListener {
 		titleText.setTypeface(type);
 		titleText.setAlpha(0f);
 
-		findViewById(R.id.listenButton).setOnClickListener(this);
+		button.setOnClickListener(this);
 
-		sr = SpeechRecognizer.createSpeechRecognizer(getApplicationContext());
-		
-		startAnimation();
+
+
+		startAnimation();	
 	}
 
 	@Override
@@ -159,6 +107,14 @@ public class MainActivity extends Activity implements OnClickListener {
 
 			popupWindow.showAtLocation(this.findViewById(R.id.listenButton), Gravity.CENTER, 0, 0);
 			break;
+		case R.id.tutorial:
+			eraseSentenceAndDiagram();
+			ArrayList<String> tests = new ArrayList<String> (Arrays.asList(getResources().getStringArray(R.array.tests)));
+
+			float[] testToRun = {0f,1f};
+
+			validateAndAddToDiagram(testToRun, tests);
+			break;
 		default:
 			break;
 		}
@@ -172,23 +128,26 @@ public class MainActivity extends Activity implements OnClickListener {
 	}
 
 	public void onClick(View arg0) {
-		recording(true);
-
+		notifyRecording(true);
+		eraseSentenceAndDiagram();
+		SpeechRecognizer sr = SpeechRecognizer.createSpeechRecognizer(getApplicationContext());
 		startListening(sr);
 	}
 
 	private void startListening(final SpeechRecognizer sr) {
-		
-		liveDiagramming = sharedPrefs.getBoolean(SettingsFragment.KEY_PREF_LIVE_DIAG, false);
-		
-		Log.i("Main", "live diagramming is " + liveDiagramming);
 
-		/* clear the text view */
-		sentenceView.setText("");
+		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
 
-		sentence = new Sentence(this);
+		final boolean performLiveDiagramming = sharedPrefs.getBoolean(SettingsFragment.KEY_PREF_LIVE_DIAG, false);
 
-		Intent intent = createRecognizerIntent();
+		Log.i("Speech", "live diagramming is " + (performLiveDiagramming ? "on" : "off"));
+
+		Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+		intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getApplicationContext().getPackageName());
+		intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+		intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+
+		intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
 
 		final Runnable stopListening = new Runnable() {
 			@Override
@@ -200,19 +159,9 @@ public class MainActivity extends Activity implements OnClickListener {
 
 		sr.setRecognitionListener( new RecognitionListener() {
 
-			private String bestSentence = "";
-
-			private int wordCount = 0;
-
 			@Override
 			public void onBeginningOfSpeech() {
 				Log.d("Speech", "onBeginningOfSpeech");
-				bestSentence = "";
-			}
-
-			@Override
-			public void onBufferReceived(byte[] buffer) {
-				Log.d("Speech", "onBufferReceived");
 			}
 
 			@Override
@@ -225,7 +174,7 @@ public class MainActivity extends Activity implements OnClickListener {
 			public void onError(int error) {
 				Log.d("Speech", "onError");
 
-				signifyWarning();
+				notifyWarning();
 				handler.removeCallbacks(stopListening);
 
 				switch (error)
@@ -246,35 +195,16 @@ public class MainActivity extends Activity implements OnClickListener {
 			}
 
 			@Override
-			public void onEvent(int eventType, Bundle params) {
-				Log.d("Speech", "onEvent");
-			}
-
-			@Override
+			@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 			public void onPartialResults(Bundle partialResults) {
 				Log.d("Speech", "onPartialResults");
-				if (liveDiagramming) {
+				if (performLiveDiagramming) {
 
-					ArrayList<String> results = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-					String partials = results.get(0);
-					if (!partials.equals("")) {
-						Log.i("Main", "partial results: " + partials + ".");
-						String[] words = partials.split(" ");
-						if (words.length > wordCount) {
-							if (words[wordCount] != null) {
-								Log.i("Main",  "adding word " + words[wordCount]);
-								sentence.addWord(words[wordCount]);
-								appendHypertextToSentence(sentence.removeWordAsHtml());
-								wordCount++;
-							}
-						}
-					}
+					float[] confidences = partialResults.getFloatArray(SpeechRecognizer.CONFIDENCE_SCORES);
+					ArrayList<String> phrases = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+
+					validateAndAddToDiagram(confidences, phrases);
 				}
-			}
-
-			@Override
-			public void onReadyForSpeech(Bundle params) {
-				Log.d("Speech", "onReadyForSpeech");
 			}
 
 			@SuppressLint("DefaultLocale")
@@ -282,39 +212,67 @@ public class MainActivity extends Activity implements OnClickListener {
 			@Override
 			public void onResults(Bundle results) {
 				Log.d("Speech", "onResults");
-				recording(false);
+				notifyRecording(false);
 
-				if (!liveDiagramming) {
+				float[] confidences = results.getFloatArray(SpeechRecognizer.CONFIDENCE_SCORES);
+				ArrayList<String> phrases = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
 
-					float[] confidenceList = results.getFloatArray(SpeechRecognizer.CONFIDENCE_SCORES);
-					int bestGuessIndex = 0;
-					float highestConfidence = 0;
-					for (int i = 0; i < confidenceList.length; i++) {
-						if (confidenceList[i] >= highestConfidence) {
-							highestConfidence = confidenceList[i];
-							bestGuessIndex = i;
-						}
-					}
-					ArrayList<String> strlist = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-
-					if (highestConfidence > .6) {
-						Log.d("Speech", "resultant string=" + strlist.get(bestGuessIndex) + ", with confidence of " + highestConfidence);
-						bestSentence = strlist.get(bestGuessIndex);
-					} else {
-						Log.d("Speech", "low confidence");
-						showMsg( "Please say that again...");
-						return;
-					}
-
-					diagram(bestSentence);
-				}
+				validateAndAddToDiagram(confidences, phrases);
 			}
 
 			@Override
 			public void onRmsChanged(float rmsdB) {
 			}
+			@Override
+			public void onBufferReceived(byte[] arg0) {
+			}
+			@Override
+			public void onEvent(int arg0, Bundle arg1) {
+			}
+			@Override
+			public void onReadyForSpeech(Bundle params) {
+			}
 		});
 		sr.startListening(intent);
+	}
+
+	protected void validateAndAddToDiagram(float[] confidences, ArrayList<String> phrases) {
+		int best = 0;
+		float highestConfidence = 0;
+		if (confidences != null) {
+			for (int i = 0; i < confidences.length; i++) {
+				if (confidences[i] >= highestConfidence) {
+					highestConfidence = confidences[i];
+					best = i;
+				}
+			}
+		} else {
+			/* its a partial result, so we just have to trust the first thing we get back */
+			best = 0;
+			highestConfidence = 1;
+		}
+
+		/* an arbitrary confidence threshold */
+		if (highestConfidence > .6) {
+			String phrase = phrases.get(best);
+			if (phrase.equals("")) {
+				Log.d("Main", "empty result phrase");
+				return;
+			}
+			String[] words = phrase.split(" ");
+			int phraseSize = words.length;
+			int sentenceSize = sentence.getWordCount();
+			if (phraseSize > sentenceSize) {
+				/* starting from the end of our current sentence, add whatever new words we have */
+				for (int i = sentenceSize; i < phraseSize; i++) {
+					addWordToSentenceAndDiagram(words[i]);
+				}
+			}
+		} else {
+			/* will only get here when the final results come in */
+			showMsg( "Please say that again...");
+			eraseSentenceAndDiagram();
+		}
 	}
 
 	@SuppressLint("NewApi")
@@ -347,7 +305,7 @@ public class MainActivity extends Activity implements OnClickListener {
 
 		ObjectAnimator titleFadeOut = ObjectAnimator.ofFloat(titleText, "alpha",  1f, 0f);
 		titleFadeOut.setDuration(secondStageDuration);
-		
+
 		ObjectAnimator sentenceFadeIn = ObjectAnimator.ofFloat(sentenceView, "alpha",  0f, 1f);
 		sentenceFadeIn.setDuration(secondStageDuration);
 
@@ -363,11 +321,9 @@ public class MainActivity extends Activity implements OnClickListener {
 				button.setEnabled(true);
 			}
 		}, firstStageDuration + secondStageDuration);
-
-		//diagram("Egads the evil teacher assigns us work daily and expects it on his desk by eight the next morning");
 	}
 
-	private void recording(boolean enabled) 
+	private void notifyRecording(boolean enabled) 
 	{
 		long duration = 100;
 		float distance = -50f;
@@ -407,15 +363,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		}, (2*duration));
 	}
 
-	public void diagram(String bestSentence) {
-		sentence = new Sentence(this);
-		sentence.addWords(bestSentence);
-
-		// start the UI update handler
-		updateSentenceViewHandler.post(updateSentenceView);
-	}
-
-	public void signifyWarning() {
+	public void notifyWarning() {
 		long halfStageDuration = 50;
 		long fullStageDuration = 100;
 		float leftOffset = -25f;
@@ -462,8 +410,19 @@ public class MainActivity extends Activity implements OnClickListener {
 		wobble.playSequentially(halfRightMove, fullLeftMove, fullRightMove, fullLeftMove2, halfRightMove2);
 
 		wobble.start();
-
 	}
 
-	
+	private void eraseSentenceAndDiagram() {
+		sentence = new Sentence(this);
+		/* clear the text view */
+		sentenceView.setText("");
+	}
+
+	private void addWordToSentenceAndDiagram(String word) {
+		Log.d("Main", "adding " + word + " to diagram");
+		int id = sentence.addWord(word);
+		String wordHtml = sentence.getWordHtml(id);
+		sentenceView.append(Html.fromHtml(wordHtml));
+		sentenceView.invalidate();
+	}
 }

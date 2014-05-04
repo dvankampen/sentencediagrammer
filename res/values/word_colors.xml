@@ -9,5 +9,6 @@
    <string name="preposition">#98FB98</string> <!--  pale green -->
    <string name="conjunction">#FF00FF</string> <!--  magenta -->
    <string name="interjection">#008000</string><!--  green -->
+   <string name="abbreviation">#008000</string><!--  green -->
 </resources>
 
