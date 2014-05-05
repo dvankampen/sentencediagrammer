@@ -1,10 +1,6 @@
 package com.vnkmpn.sentencediagrammer;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-
-
-import com.vnkmpn.sentencediagrammer.language.Sentence;
 
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
@@ -37,6 +33,8 @@ import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.vnkmpn.sentencediagrammer.language.Sentence;
+
 @SuppressLint("DefaultLocale")
 public class MainActivity extends Activity implements OnClickListener {
 
@@ -64,13 +62,12 @@ public class MainActivity extends Activity implements OnClickListener {
 
 		button.setOnClickListener(this);
 
-
-
 		startAnimation();	
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
+		Log.d("Main", "building options menu");
 		MenuInflater menuInflater = getMenuInflater();
 		menuInflater.inflate(R.menu.main, menu);
 		return true;
@@ -78,6 +75,7 @@ public class MainActivity extends Activity implements OnClickListener {
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
+		Log.d("Main", "menu item selected");
 		switch (item.getItemId()) {
 		case R.id.menu_clear:
 			((TextView)findViewById(R.id.sentenceText)).setText("");
@@ -107,18 +105,36 @@ public class MainActivity extends Activity implements OnClickListener {
 
 			popupWindow.showAtLocation(this.findViewById(R.id.listenButton), Gravity.CENTER, 0, 0);
 			break;
-		case R.id.tutorial:
-			eraseSentenceAndDiagram();
-			ArrayList<String> tests = new ArrayList<String> (Arrays.asList(getResources().getStringArray(R.array.tests)));
-
-			float[] testToRun = {0f,1f};
-
-			validateAndAddToDiagram(testToRun, tests);
+		case R.id.test_sentence_1:
+			runTest(1);
+			break;
+		case R.id.test_sentence_2:
+			runTest(2);
 			break;
 		default:
 			break;
 		}
+		Log.d("Main", "*** done processing menu selection");
 		return super.onOptionsItemSelected(item);
+	}
+
+	private void runTest(int testNumber) {
+		String test;
+		ArrayList<String> tests = new ArrayList<String>();
+
+		eraseSentenceAndDiagram();
+		switch (testNumber) {
+		case 1:
+			test = getResources().getString(R.string.test1);
+			tests.add(test);
+			break;
+		case 2:
+			test = getResources().getString(R.string.test2);
+			break;
+		default:
+			break;
+		}
+		validateAndAddToDiagram(null, tests);
 	}
 
 	private void showMsg(String msg) {
@@ -234,45 +250,6 @@ public class MainActivity extends Activity implements OnClickListener {
 			}
 		});
 		sr.startListening(intent);
-	}
-
-	protected void validateAndAddToDiagram(float[] confidences, ArrayList<String> phrases) {
-		int best = 0;
-		float highestConfidence = 0;
-		if (confidences != null) {
-			for (int i = 0; i < confidences.length; i++) {
-				if (confidences[i] >= highestConfidence) {
-					highestConfidence = confidences[i];
-					best = i;
-				}
-			}
-		} else {
-			/* its a partial result, so we just have to trust the first thing we get back */
-			best = 0;
-			highestConfidence = 1;
-		}
-
-		/* an arbitrary confidence threshold */
-		if (highestConfidence > .6) {
-			String phrase = phrases.get(best);
-			if (phrase.equals("")) {
-				Log.d("Main", "empty result phrase");
-				return;
-			}
-			String[] words = phrase.split(" ");
-			int phraseSize = words.length;
-			int sentenceSize = sentence.getWordCount();
-			if (phraseSize > sentenceSize) {
-				/* starting from the end of our current sentence, add whatever new words we have */
-				for (int i = sentenceSize; i < phraseSize; i++) {
-					addWordToSentenceAndDiagram(words[i]);
-				}
-			}
-		} else {
-			/* will only get here when the final results come in */
-			showMsg( "Please say that again...");
-			eraseSentenceAndDiagram();
-		}
 	}
 
 	@SuppressLint("NewApi")
@@ -412,6 +389,45 @@ public class MainActivity extends Activity implements OnClickListener {
 		wobble.start();
 	}
 
+	protected void validateAndAddToDiagram(float[] confidences, ArrayList<String> phrases) {
+		int best = 0;
+		float highestConfidence = 0;
+		if (confidences != null) {
+			for (int i = 0; i < confidences.length; i++) {
+				if (confidences[i] >= highestConfidence) {
+					highestConfidence = confidences[i];
+					best = i;
+				}
+			}
+		} else {
+			/* its a partial result, so we just have to trust the first thing we get back */
+			best = 0;
+			highestConfidence = 1;
+		}
+
+		/* an arbitrary confidence threshold */
+		if (highestConfidence > .6) {
+			String phrase = phrases.get(best);
+			if (phrase.equals("")) {
+				Log.d("Main", "empty result phrase");
+				return;
+			}
+			String[] words = phrase.split(" ");
+			int phraseSize = words.length;
+			int sentenceSize = sentence.getWordCount();
+			if (phraseSize > sentenceSize) {
+				/* starting from the end of our current sentence, add whatever new words we have */
+				for (int i = sentenceSize; i < phraseSize; i++) {
+					addWordToSentenceAndDiagram(words[i]);
+				}
+			}
+		} else {
+			/* will only get here when the final results come in */
+			showMsg( "Please say that again...");
+			eraseSentenceAndDiagram();
+		}
+	}
+
 	private void eraseSentenceAndDiagram() {
 		sentence = new Sentence(this);
 		/* clear the text view */
@@ -423,6 +439,9 @@ public class MainActivity extends Activity implements OnClickListener {
 		int id = sentence.addWord(word);
 		String wordHtml = sentence.getWordHtml(id);
 		sentenceView.append(Html.fromHtml(wordHtml));
+		
+		/* invalidate is needed for live diagramming, but doesn't matter much when
+		 * diagramming the whole sentence at one */
 		sentenceView.invalidate();
 	}
 }

@@ -1,4 +1,5 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
     <item
         android:id="@+id/menu_clear"
         android:icon="@android:drawable/ic_menu_delete"
@@ -11,8 +12,22 @@
         android:id="@+id/menu_about"
         android:icon="@android:drawable/ic_menu_help"
         android:title="About"/>
-    <item 
-        android:id="@+id/tutorial"
-        android:title="Tutorial"/>
+    <item
+        android:id="@+id/demo"
+        android:title="Demo">
+
+        <!-- "file" submenu -->
+        <menu>
+            <item
+                android:id="@+id/test_sentence_1"
+                android:title="Test Sentence 1"/>
+            <item
+                android:id="@+id/test_sentence_2"
+                android:title="Test Sentence 2"/>
+            <item
+                android:id="@+id/test_sentence_custome"
+                android:title="Write your own..."/>
+        </menu>
+    </item>
 
 </menu>
