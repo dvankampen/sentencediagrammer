@@ -23,28 +23,28 @@ import android.util.Log;
 
 public class MWDictionary extends AsyncTask<String, Void, Integer> {
 	
-	String key = "INVALID_KEY";
-	ArrayList<String> speechTypes;
-	ArrayList<String> definitions;
+	String mKey = "INVALID_KEY";
+	ArrayList<SpeechType> mSpeechTypes;
+	ArrayList<String> mDefinitions;
 	
 	public MWDictionary(String key) {
-		this.key = key;
+		this.mKey = key;
 	}
 
 	protected Integer doInBackground(String... args) {
 		String leadingURL = "http://www.dictionaryapi.com/api/v1/references/collegiate/xml/";
 		String keyTag = "?key=";
 		String word = args[0];
-		if (key.equals("INVALID_KEY"))
+		if (mKey.equals("INVALID_KEY"))
 		{
 			Log.d("MWDict", "invalid key used, returning");
 			return -1;
 		}
 
-		HttpGet uri = new HttpGet(leadingURL + word + keyTag + key);
+		HttpGet uri = new HttpGet(leadingURL + word + keyTag + mKey);
 
-		speechTypes = new ArrayList<String>();
-		definitions = new ArrayList<String>();
+		mSpeechTypes = new ArrayList<SpeechType>();
+		mDefinitions = new ArrayList<String>();
 
 		DefaultHttpClient client = new DefaultHttpClient();
 		HttpResponse resp = null;
@@ -96,7 +96,27 @@ public class MWDictionary extends AsyncTask<String, Void, Integer> {
 				{
 					Node child = functionalLabelElements.item(i).getChildNodes().item(0);
 					String text = child.getNodeValue();
-					speechTypes.add(text);
+					if (text.equals(SpeechType.NOUN.getName())) {
+						mSpeechTypes.add(SpeechType.NOUN);
+					} else if (text.equals(SpeechType.VERB.getName())) {
+						mSpeechTypes.add(SpeechType.VERB);
+					} else if (text.equals(SpeechType.ADVERB.getName())) {
+						mSpeechTypes.add(SpeechType.ADVERB);
+					} else if (text.equals(SpeechType.ADJECTIVE.getName())) {
+						mSpeechTypes.add(SpeechType.ADJECTIVE);
+					} else if (text.equals(SpeechType.PRONOUN.getName())) {
+						mSpeechTypes.add(SpeechType.PRONOUN);
+					} else if (text.equals(SpeechType.CONJUNCTION.getName())) {
+						mSpeechTypes.add(SpeechType.CONJUNCTION);
+					} else if (text.equals(SpeechType.PREPOSITION.getName())) {
+						mSpeechTypes.add(SpeechType.PREPOSITION);
+					} else if (text.contains(SpeechType.ARTICLE.getName())) {
+						mSpeechTypes.add(SpeechType.ARTICLE);
+					} else if (text.equals(SpeechType.CONTRACTION.getName())) {
+						mSpeechTypes.add(SpeechType.CONTRACTION);
+					} else {
+						mSpeechTypes.add(SpeechType.INVALID);
+					}
 				}
 			}
 		} else {
@@ -111,7 +131,7 @@ public class MWDictionary extends AsyncTask<String, Void, Integer> {
 				{
 					Node child = definingTextElements.item(i).getChildNodes().item(0);
 					String text = child.getNodeValue();
-					definitions.add(text);
+					mDefinitions.add(text);
 				}
 			}
 		} else {
@@ -130,11 +150,11 @@ public class MWDictionary extends AsyncTask<String, Void, Integer> {
 		// TODO: do something with the feed
 	}
 
-	public ArrayList<String> getSpeechTypes() {
-		return speechTypes;
+	public ArrayList<SpeechType> getSpeechTypes() {
+		return mSpeechTypes;
 	}
 
 	public ArrayList<String> getDefinitions() {
-		return definitions;
+		return mDefinitions;
 	}
 }

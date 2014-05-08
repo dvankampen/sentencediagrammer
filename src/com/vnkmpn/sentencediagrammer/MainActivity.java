@@ -18,7 +18,6 @@ import android.preference.PreferenceManager;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
-import android.text.Html;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -30,37 +29,61 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.PopupWindow;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.vnkmpn.sentencediagrammer.language.Sentence;
+import com.vnkmpn.sentencediagrammer.diagram.SentenceDiagramLayout;
+import com.vnkmpn.sentencediagrammer.diagram.SentenceTextView;
+import com.vnkmpn.sentencediagrammer.language.Word;
 
 @SuppressLint("DefaultLocale")
 public class MainActivity extends Activity implements OnClickListener {
 
-	private TextView sentenceView;
+	private SentenceTextView mSentenceView;
 
-	private Sentence sentence;
+	private TextView mExpText;
 
-	private ImageButton button;
+	private SentenceDiagramLayout mSentenceDiagram;
+
+	private RelativeLayout mMainLayout;
+
+	private ImageButton mButton;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
-		button = (ImageButton) findViewById(R.id.listenButton);
-
+		mButton = (ImageButton) findViewById(R.id.listenButton);
+		mButton.setOnClickListener(this);
 		Typeface type = Typeface.createFromAsset(getAssets(),"fonts/RobotoCondensed-Regular.ttf"); 
 
-		sentenceView = (TextView)findViewById(R.id.sentenceText);
-		sentenceView.setTypeface(type);
-		sentenceView.setAlpha(0f);
-
+		mExpText = new TextView(this);
+		mExpText.setText("please press the green microphone to begin");
+		mExpText.setTypeface(type);
+		mExpText.setId(1);
+		mSentenceView = new SentenceTextView(this);
+		mSentenceView.setId(2);
 		TextView titleText = (TextView)findViewById(R.id.titleText);
 		titleText.setTypeface(type);
 		titleText.setAlpha(0f);
 
-		button.setOnClickListener(this);
+		mSentenceDiagram = new SentenceDiagramLayout(this);
+		mSentenceDiagram.setId(4);
+
+		mMainLayout = (RelativeLayout)findViewById(R.id.main_layout);
+
+		RelativeLayout.LayoutParams params1 = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+		RelativeLayout.LayoutParams params2 = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+		RelativeLayout.LayoutParams params3 = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+
+		params1.addRule(RelativeLayout.BELOW, mButton.getId());
+		params2.addRule(RelativeLayout.BELOW, mSentenceView.getId());
+		params3.addRule(RelativeLayout.BELOW, mSentenceDiagram.getId());
+
+		mMainLayout.addView(mSentenceView, params1);
+		mMainLayout.addView(mSentenceDiagram, params2);
+		mMainLayout.addView(mExpText, params3);
 
 		startAnimation();	
 	}
@@ -78,7 +101,6 @@ public class MainActivity extends Activity implements OnClickListener {
 		Log.d("Main", "menu item selected");
 		switch (item.getItemId()) {
 		case R.id.menu_clear:
-			((TextView)findViewById(R.id.sentenceText)).setText("");
 			break;
 		case R.id.menu_preferences:
 			Intent intent = new Intent(MainActivity.this,
@@ -130,6 +152,7 @@ public class MainActivity extends Activity implements OnClickListener {
 			break;
 		case 2:
 			test = getResources().getString(R.string.test2);
+			tests.add(test);
 			break;
 		default:
 			break;
@@ -260,12 +283,12 @@ public class MainActivity extends Activity implements OnClickListener {
 		float secondStageDistance = 100f;
 		TextView titleText = (TextView) findViewById(R.id.titleText);
 
-		button.setEnabled(false);
+		mButton.setEnabled(false);
 
-		ObjectAnimator buttonDropIn = ObjectAnimator.ofFloat(button,
+		ObjectAnimator buttonDropIn = ObjectAnimator.ofFloat(mButton,
 				"translationY", firstStageDistance, secondStageDistance);
 		buttonDropIn.setDuration(firstStageDuration);
-		ObjectAnimator buttonFadeIn = ObjectAnimator.ofFloat(button, "alpha",
+		ObjectAnimator buttonFadeIn = ObjectAnimator.ofFloat(mButton, "alpha",
 				0f, 1f);
 		buttonFadeIn.setDuration(firstStageDuration);
 
@@ -273,7 +296,7 @@ public class MainActivity extends Activity implements OnClickListener {
 				0f, 1f);
 		titleFadeIn.setDuration(firstStageDuration);
 
-		ObjectAnimator bounceUp = ObjectAnimator.ofFloat(button,  "translationY", secondStageDistance, 0f);
+		ObjectAnimator bounceUp = ObjectAnimator.ofFloat(mButton,  "translationY", secondStageDistance, 0f);
 		bounceUp.setDuration(secondStageDuration);
 
 		AnimatorSet stageOne = new AnimatorSet();
@@ -283,7 +306,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		ObjectAnimator titleFadeOut = ObjectAnimator.ofFloat(titleText, "alpha",  1f, 0f);
 		titleFadeOut.setDuration(secondStageDuration);
 
-		ObjectAnimator sentenceFadeIn = ObjectAnimator.ofFloat(sentenceView, "alpha",  0f, 1f);
+		ObjectAnimator sentenceFadeIn = ObjectAnimator.ofFloat(mSentenceView, "alpha",  0f, 1f);
 		sentenceFadeIn.setDuration(secondStageDuration);
 
 		AnimatorSet stageTwo = new AnimatorSet();
@@ -291,11 +314,11 @@ public class MainActivity extends Activity implements OnClickListener {
 		stageTwo.play(bounceUp).with(titleFadeOut).with(sentenceFadeIn).after(stageOne);
 		stageTwo.start();
 
-		button.postDelayed(new Runnable() {
+		mButton.postDelayed(new Runnable() {
 			@Override
 			public void run() {
-				button.setBackgroundResource(R.drawable.greenroundcorners);
-				button.setEnabled(true);
+				mButton.setBackgroundResource(R.drawable.greenroundcorners);
+				mButton.setEnabled(true);
 			}
 		}, firstStageDuration + secondStageDuration);
 	}
@@ -308,7 +331,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		float destination;
 		final int nextColor;
 
-		button.setEnabled(false);
+		mButton.setEnabled(false);
 
 		origin = 0;
 		destination = distance;
@@ -318,11 +341,11 @@ public class MainActivity extends Activity implements OnClickListener {
 		} else {
 			nextColor = R.drawable.greenroundcorners;
 		}
-		ObjectAnimator buttonMove = ObjectAnimator.ofFloat(button,
+		ObjectAnimator buttonMove = ObjectAnimator.ofFloat(mButton,
 				"translationY", origin, destination);
 		buttonMove.setDuration(duration);
 
-		ObjectAnimator buttonMove2 = ObjectAnimator.ofFloat(button,
+		ObjectAnimator buttonMove2 = ObjectAnimator.ofFloat(mButton,
 				"translationY", destination, origin);
 		buttonMove2.setDuration(duration);
 
@@ -331,11 +354,11 @@ public class MainActivity extends Activity implements OnClickListener {
 		bounce.playSequentially(buttonMove, buttonMove2);
 		bounce.start();
 
-		button.postDelayed(new Runnable() {
+		mButton.postDelayed(new Runnable() {
 			@Override
 			public void run() {
-				button.setBackgroundResource(nextColor);
-				button.setEnabled(true);
+				mButton.setBackgroundResource(nextColor);
+				mButton.setEnabled(true);
 			}
 		}, (2*duration));
 	}
@@ -347,40 +370,40 @@ public class MainActivity extends Activity implements OnClickListener {
 		float rightOffset = 25f;
 		float origin = 0;
 
-		button.setEnabled(false);
+		mButton.setEnabled(false);
 
-		button.setBackgroundResource(R.drawable.yellowroundcorners);
+		mButton.setBackgroundResource(R.drawable.yellowroundcorners);
 
-		ObjectAnimator halfRightMove = ObjectAnimator.ofFloat(button,
+		ObjectAnimator halfRightMove = ObjectAnimator.ofFloat(mButton,
 				"translationX", origin, rightOffset);
 		halfRightMove.setDuration(halfStageDuration);
 
-		ObjectAnimator halfLeftMove = ObjectAnimator.ofFloat(button,
+		ObjectAnimator halfLeftMove = ObjectAnimator.ofFloat(mButton,
 				"translationX", rightOffset, origin);
 		halfLeftMove.setDuration(halfStageDuration);
 
-		ObjectAnimator fullLeftMove = ObjectAnimator.ofFloat(button,
+		ObjectAnimator fullLeftMove = ObjectAnimator.ofFloat(mButton,
 				"translationX", rightOffset, leftOffset);
 		fullLeftMove.setDuration(fullStageDuration);
 
-		ObjectAnimator fullRightMove = ObjectAnimator.ofFloat(button,
+		ObjectAnimator fullRightMove = ObjectAnimator.ofFloat(mButton,
 				"translationX", leftOffset, rightOffset);
 		fullRightMove.setDuration(fullStageDuration);
 
 		ObjectAnimator fullLeftMove2 = fullLeftMove.clone();
 		fullLeftMove2.setDuration(fullStageDuration);
 
-		ObjectAnimator halfRightMove2 = ObjectAnimator.ofFloat(button,
+		ObjectAnimator halfRightMove2 = ObjectAnimator.ofFloat(mButton,
 				"translationX", leftOffset, origin);
 		halfRightMove2.setDuration(halfStageDuration);
 
 		AnimatorSet wobble = new AnimatorSet();
 
-		button.postDelayed(new Runnable() {
+		mButton.postDelayed(new Runnable() {
 			@Override
 			public void run() {
-				button.setBackgroundResource(R.drawable.greenroundcorners);
-				button.setEnabled(true);
+				mButton.setBackgroundResource(R.drawable.greenroundcorners);
+				mButton.setEnabled(true);
 			}
 		}, (4*fullStageDuration));
 
@@ -414,13 +437,15 @@ public class MainActivity extends Activity implements OnClickListener {
 			}
 			String[] words = phrase.split(" ");
 			int phraseSize = words.length;
-			int sentenceSize = sentence.getWordCount();
+			int sentenceSize = mSentenceView.getWordCount();
 			if (phraseSize > sentenceSize) {
 				/* starting from the end of our current sentence, add whatever new words we have */
 				for (int i = sentenceSize; i < phraseSize; i++) {
-					addWordToSentenceAndDiagram(words[i]);
+					Word word = new Word(this, words[i].toLowerCase().trim());
+					addWordToSentence(word);
 				}
 			}
+
 		} else {
 			/* will only get here when the final results come in */
 			showMsg( "Please say that again...");
@@ -429,19 +454,19 @@ public class MainActivity extends Activity implements OnClickListener {
 	}
 
 	private void eraseSentenceAndDiagram() {
-		sentence = new Sentence(this);
+		/* remove the explanatory text if its ever showing */
+		if (mMainLayout.findViewById(mExpText.getId()) != null) {
+			mMainLayout.removeView(mExpText);
+		}
 		/* clear the text view */
-		sentenceView.setText("");
+		mSentenceView.clear();
+		/* clear all words from the diagram area */
+		mSentenceDiagram.removeAllViews();
 	}
 
-	private void addWordToSentenceAndDiagram(String word) {
-		Log.d("Main", "adding " + word + " to diagram");
-		int id = sentence.addWord(word);
-		String wordHtml = sentence.getWordHtml(id);
-		sentenceView.append(Html.fromHtml(wordHtml));
-		
-		/* invalidate is needed for live diagramming, but doesn't matter much when
-		 * diagramming the whole sentence at one */
-		sentenceView.invalidate();
+	private void addWordToSentence(Word word) {
+		Log.d("Main", "adding " + word.getPlaintext().trim() + " to diagram");
+		mSentenceView.addWord(word);
+		mSentenceDiagram.addWord(word);
 	}
 }
